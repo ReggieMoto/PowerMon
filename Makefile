@@ -1,4 +1,6 @@
 default: powermon
 
+SOURCES := main.c
+	
 powermon:
-	gcc main.c -o powermon
+	gcc $(SOURCES) -o powermon
