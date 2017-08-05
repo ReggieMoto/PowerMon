@@ -20,7 +20,9 @@ int main(int argc, int argv[])
 
 	if ((user_io_pid != 0) && (wifi_io_pid != 0))
 	{
+		int temp = 0;
 	    printf ("This is the parent process, with id %d\n", (int) getpid ());
+	    temp +=1;
 	}
 	else
 	{
