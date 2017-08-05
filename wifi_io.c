@@ -1,19 +1,18 @@
-* =================================
+/* =================================
  * wifi_io.c
  */
 
 #include <stdio.h>
+#include <unistd.h>
+#include <stdio.h>
 
- void wifi_io_thread(void)
+void wifi_io_thread(int *sig)
 {
+	pid_t pid = fork();
 
-	int thread_exit = FALSE;
+	if (pid == 0)
+		printf("PowerMon: wifi_io_thread.\n");
 
-	printf("Entering PowerMon: wifi_io_thread.");
-
-	do {
-
-	} while (!thread_exit):
-
-	printf("Exiting PowerMon: wifi_io_thread.")
+	if (*sig == 0)
+		*sig = 1;
 }

@@ -6,31 +6,19 @@
 #include <unistd.h>
 #include <stdio.h>
 
+extern void user_io_thread(int *sig);
+extern void wifi_io_thread(int *sig);
+
 int main(int argc, int argv[])
 {
-	pid_t user_io_pid;
-	pid_t wifi_io_pid;
+	int sig=0;
 
-	/* Start of the program */
-	printf("Starting up PowerMon.\n");
+    printf ("This is the parent process, with id %d\n", (int) getpid ());
 
-	/* Fork the process */
-	user_io_pid = fork();
-	wifi_io_pid = fork();
+    user_io_thread(&sig);
 
-	if ((user_io_pid != 0) && (wifi_io_pid != 0))
-	{
-		int temp = 0;
-	    printf ("This is the parent process, with id %d\n", (int) getpid ());
-	    temp +=1;
-	}
-	else
-	{
-		if (getpid() == user_io_pid)
-		    printf ("The User I/O process ID is %d\n",(int) user_io_pid );
-		else
-		    printf ("The Wifi I/O process ID is %d\n",(int) wifi_io_pid );
-	}
+    if (sig)
+    	wifi_io_thread(&sig);
 
 	return 0;
 }
