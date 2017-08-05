@@ -8,22 +8,26 @@
 
 int main(int argc, int argv[])
 {
-	pid_t child_pid;
+	pid_t user_io_pid;
+	pid_t wifi_io_pid;
 
 	/* Start of the program */
 	printf("Starting up PowerMon.\n");
 
 	/* Fork the process */
-	child_pid = fork();
+	user_io_pid = fork();
+	wifi_io_pid = fork();
 
-	if (child_pid != 0)
+	if ((user_io_pid != 0) && (wifi_io_pid != 0))
 	{
 	    printf ("This is the parent process, with id %d\n", (int) getpid ());
-	    printf ("The child's process ID is %d\n",(int) child_pid );
 	}
 	else
 	{
-		printf ("This is the child process, with id %d\n", (int) getpid ());
+		if (getpid() == user_io_pid)
+		    printf ("The User I/O process ID is %d\n",(int) user_io_pid );
+		else
+		    printf ("The Wifi I/O process ID is %d\n",(int) wifi_io_pid );
 	}
 
 	return 0;
