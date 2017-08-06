@@ -3,16 +3,37 @@
  */
 
 #include <stdio.h>
+#include <errno.h>
+#include <string.h>
 #include <unistd.h>
-#include <stdio.h>
+#include <pthread.h>
 
-void wifi_io_thread(int *sig)
+pthread_t wifi_io_tid = (pthread_t)NULL;
+
+/* =================================
+ * void wifi_io_thread(void)
+ */
+
+void* wifi_io_thread(void *arg)
 {
-	pid_t pid = fork();
+	printf("\tPowerMon: wifi_io_thread.\n");
+	pthread_exit((void *)NULL);
 
-	if (pid == 0)
-		printf("PowerMon: wifi_io_thread.\n");
+	return (void *)NULL;
+}
 
-	if (*sig == 0)
-		*sig = 1;
+/* =================================
+ * void wifi_io_thread_create(void)
+ */
+
+void wifi_io_thread_create(void)
+{
+    int err = pthread_create(
+    		&wifi_io_tid,
+    		NULL,
+			&wifi_io_thread,
+			NULL);
+
+    if (err != 0)
+        printf("\tUnable to create wifi_io_thread :[%s]\n", strerror(err));
 }
