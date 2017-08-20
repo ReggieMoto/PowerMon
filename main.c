@@ -1,6 +1,22 @@
-/* =================================
+/* ============================================================== */
+/*
  * main.c
+ *
+ * Copyright (c) 2017 David Hammond
+ * All Rights Reserved.
  */
+/* ============================================================== */
+/*
+ * NOTICE:  All information contained herein is and remains the
+ * property of David Hammond. The intellectual and technical
+ * concepts contained herein are proprietary to David Hammond
+ * and may be covered by U.S.and Foreign Patents, patents in
+ * process, and are protected by trade secret or copyright law.
+ * Dissemination of this information or reproduction of this
+ * material is strictly forbidden unless prior written permission
+ * is obtained David Hammond.
+ */
+/* ============================================================== */
 
 #include <sys/types.h>
 #include <unistd.h>
@@ -38,8 +54,7 @@ int main(int argc, char *argv[])
 	printf ("Spawning the data_store_thread.\n");
 	data_store_thread_create();
 
-	/* Now run the power monitor thread */
-	//power_mon_thread(pwr_mon_mq);
+	/* Wait here to join all active threads upon exit */
 
 	pthread_join(powermon_tid, (void**)NULL);
 	pthread_join(user_io_tid, (void**)NULL);
