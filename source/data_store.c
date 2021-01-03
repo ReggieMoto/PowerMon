@@ -73,7 +73,7 @@ static msg_q_status_e send_msg(pwrmon_msg_t *msg, msg_q_client_e client)
 	if (status != msg_q_status_success)
 		POWERMON_LOGGER(DSTORE, WARN, "Bad return from msg_q_send.\n",0);
 	else
-		POWERMON_LOGGER(DSTORE, INFO, "Message sent to %s client.\n", msg_q_get_client_name(client));
+		POWERMON_LOGGER(DSTORE, DEBUG, "Message sent to %s client.\n", msg_q_get_client_name(client));
 
 	return status;
 }
@@ -157,7 +157,7 @@ static unsigned int process_received_msg(pwrmon_msg_t *msg, const char msgLen)
 
 	case pwr_mon_msg_id_credentials:
 
-		POWERMON_LOGGER(DSTORE, INFO, "Received msg from %s client containing login credentials.\n", msg_src);
+		POWERMON_LOGGER(DSTORE, DEBUG, "Received msg from %s client containing login credentials.\n", msg_src);
 
 		credentials_t *credentials = (credentials_t *)msg->data;
 		POWERMON_LOGGER(DSTORE, DEBUG, "%s: username: %s\n", __FUNCTION__, credentials->username);
@@ -179,7 +179,7 @@ static unsigned int process_received_msg(pwrmon_msg_t *msg, const char msgLen)
 		break;
 
 	case pwr_mon_msg_id_exit:
-		POWERMON_LOGGER(DSTORE, INFO, "Received msg from %s client to exit thread.\n", msg_src);
+		POWERMON_LOGGER(DSTORE, DEBUG, "Received msg from %s client to exit thread.\n", msg_src);
 		thread_active = FALSE;
 		break;
 
@@ -229,7 +229,7 @@ void* data_store_thread(void *arg)
 
 			memset(msg, 0, msgLen);
 
-			POWERMON_LOGGER(DSTORE, INFO, "Waiting on message queue receive.\n",0);
+			POWERMON_LOGGER(DSTORE, DEBUG, "Waiting on message queue receive.\n",0);
 			status = msg_q_rcv(msg_q_client_data_store, msg, &msgLen);
 			POWERMON_LOGGER(DSTORE, DEBUG, "Received message of len %d over msg q.\n", msgLen);
 

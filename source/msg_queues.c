@@ -23,7 +23,39 @@
 #include "msg_queues.h"
 #include "powermon_logger.h"
 
-static msg_q_t queues[msg_q_client_count];
+static msg_q_t queues[msg_q_client_count] = {
+	{
+		.client = msg_q_client_powermon,
+		.client_name = "/powermon",
+		.msg_q = -1
+	},
+	{
+		.client = msg_q_client_user_io,
+		.client_name = "/user_io",
+		.msg_q = -1
+	},
+	{
+		.client = msg_q_client_console_io,
+		.client_name = "/console_io",
+		.msg_q = -1
+	},
+	{
+		.client = msg_q_client_xconsole_io,
+		.client_name = "/xconsole_io",
+		.msg_q = -1
+	},
+	{
+		.client = msg_q_client_device_io,
+		.client_name = "/device_io",
+		.msg_q = -1
+	},
+	{
+		.client = msg_q_client_data_store,
+		.client_name = "/data_store",
+		.msg_q = -1
+	}
+};
+
 static const mode_t mode = (S_IWUSR | S_IRUSR | S_ISUID);
 static const int flags = (O_RDWR | O_CREAT);
 
@@ -38,41 +70,6 @@ void msg_q_dump_client_info(void)
 		printf("Msg Q Client name: %s\n", queues[i].client_name);
 		printf("Msg Q Client qid:  %d\n\n", queues[i].msg_q);
 	}
-}
-
-/* =================================
- * msg_q_get_q_name
- */
-char * msg_q_get_q_name(msg_q_client_e client)
-{
-	char *client_name = NULL;
-
-	switch (client)
-	{
-	case msg_q_client_powermon:
-		client_name = "/powermon";
-		break;
-	case msg_q_client_user_io:
-		client_name = "/user_io";
-		break;
-	case msg_q_client_console_io:
-		client_name = "/console_io";
-		break;
-	case msg_q_client_xconsole_io:
-		client_name = "/xconsole_io";
-		break;
-	case msg_q_client_device_io:
-		client_name = "/device_io";
-		break;
-	case msg_q_client_data_store:
-		client_name = "/data_store";
-		break;
-	default:
-		POWERMON_LOGGER(MSGQ, WARN, "No client; no name.\n",0);
-		break;
-	}
-
-	return client_name;
 }
 
 /* =================================
@@ -111,23 +108,6 @@ char * msg_q_get_client_name(msg_q_client_e client)
 }
 
 /* =================================
- * msg_q_init
- */
-msg_q_status_e msg_q_init(void)
-{
-	msg_q_status_e status = msg_q_status_success;
-
-	for (msg_q_client_e i = msg_q_client_first; i <= msg_q_client_last; i++)
-	{
-		queues[i].client = i;
-		queues[i].client_name = msg_q_get_q_name(i);
-		queues[i].msg_q = -1;
-	}
-
-	return status;
-}
-
-/* =================================
  * msg_q_open
  */
 msg_q_status_e msg_q_open(const msg_q_client_e client)
@@ -135,7 +115,7 @@ msg_q_status_e msg_q_open(const msg_q_client_e client)
 	static struct mq_attr attrs;
 	msg_q_status_e status = msg_q_status_success;
 
-	if (queues[client].msg_q == -1)
+	if ((queues[client].client == client) && (queues[client].msg_q == -1))
 	{
 		attrs.mq_maxmsg = MAX_MSG_Q_DEPTH;
 		attrs.mq_msgsize = MAX_MESSAGE_SIZE;
@@ -150,10 +130,15 @@ msg_q_status_e msg_q_open(const msg_q_client_e client)
 			POWERMON_LOGGER(MSGQ, WARN, "No client message queue (errno = %d).\n", errsv);
 		}
 	}
-	else
+	else if (queues[client].msg_q != -1)
 	{
 		POWERMON_LOGGER(MSGQ, WARN, "Client %s message queue already initialized.\n", msg_q_get_client_name(client));
 		status = msg_q_status_already_inservice;
+	}
+	else /* Association between client enum and client queue is wrong  */
+	{
+		POWERMON_LOGGER(MSGQ, FATAL, "Client %s message queue inoperable.\n", msg_q_get_client_name(client));
+		status = msg_q_status_inoperable;
 	}
 
 	return status;
@@ -169,10 +154,15 @@ msg_q_status_e msg_q_close(const msg_q_client_e client)
 	/* Does this client exist in the msg q array */
 	/* If so close it; if not return an error */
 
-	if (queues[client].msg_q != -1)
+	if ((queues[client].client == client) && (queues[client].msg_q != -1))
 	{
 		mq_close(queues[client].msg_q);
 		queues[client].msg_q = -1;
+	}
+	else if (queues[client].client != client)
+	{
+		POWERMON_LOGGER(MSGQ, FATAL, "Client %s message queue inoperable.\n", msg_q_get_client_name(client));
+		status = msg_q_status_inoperable;
 	}
 
 	mq_unlink(queues[client].client_name);

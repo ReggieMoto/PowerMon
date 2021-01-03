@@ -137,7 +137,7 @@ void createAvahiServices(AvahiClient *avahiClient)
 {
 	if (avahiClient)
 	{
-		POWERMON_LOGGER(AVAHI, DEBUG, "Create Avahi PowerMon Service.\n", 0);
+		POWERMON_LOGGER(AVAHI, INFO, "Create Avahi PowerMon Service.\n", 0);
 
 		/* If this is the first time we're called, let's create a new entry group if necessary */
 		group = avahi_entry_group_new(avahiClient, avahiaEntryGroupCallback, NULL);
@@ -158,7 +158,9 @@ void createAvahiServices(AvahiClient *avahiClient)
 			POWERMON_LOGGER(AVAHI, FATAL, "Avahi entry group creation failed: %s", avahi_strerror(avahi_client_errno(avahiClient)));
 	}
 	else
-		POWERMON_LOGGER(AVAHI, WARN, "Avahi client invalid.\n", 0);
+	{
+		POWERMON_LOGGER(AVAHI, FATAL, "Avahi client invalid.\n", 0);
+	}
 }
 
 /* =================================
@@ -173,26 +175,26 @@ void avahiClientCallback( AvahiClient *client, AvahiClientState state, void* use
 		switch (state)
 		{
 			case AVAHI_CLIENT_S_RUNNING:
-				POWERMON_LOGGER(AVAHI, DEBUG, "Received Avahi state change (AVAHI_CLIENT_S_RUNNING).\n", 0);
+				POWERMON_LOGGER(AVAHI, INFO, "Received Avahi state change (AVAHI_CLIENT_S_RUNNING).\n", 0);
 				/* The server has startup successfully and registered its host
 				 * name on the network, so it's time to create our services */
 				createAvahiServices(client);
 				break;
 
 			case AVAHI_CLIENT_FAILURE:
-				POWERMON_LOGGER(AVAHI, DEBUG, "Received Avahi state change (AVAHI_CLIENT_FAILURE).\n", 0);
-				POWERMON_LOGGER(AVAHI, DEBUG, "Client failure: %s\n",avahi_strerror(avahi_client_errno(client)));
+				POWERMON_LOGGER(AVAHI, INFO, "Received Avahi state change (AVAHI_CLIENT_FAILURE).\n", 0);
+				POWERMON_LOGGER(AVAHI, FATAL, "Client failure: %s\n",avahi_strerror(avahi_client_errno(client)));
 				break;
 
 			case AVAHI_CLIENT_S_COLLISION:
-				POWERMON_LOGGER(AVAHI, DEBUG, "Received Avahi state change (AVAHI_CLIENT_S_COLLISION).\n", 0);
+				POWERMON_LOGGER(AVAHI, INFO, "Received Avahi state change (AVAHI_CLIENT_S_COLLISION).\n", 0);
 				/* Let's drop our registered services. When the server is back
 				 * in AVAHI_SERVER_RUNNING state we will register them
 				 * again with the new host name. */
 				break;
 
 			case AVAHI_CLIENT_S_REGISTERING:
-				POWERMON_LOGGER(AVAHI, DEBUG, "Received Avahi state change (AVAHI_CLIENT_S_REGISTERING).\n", 0);
+				POWERMON_LOGGER(AVAHI, INFO, "Received Avahi state change (AVAHI_CLIENT_S_REGISTERING).\n", 0);
 				/* The server records are now being established. This
 				 * might be caused by a host name change. We need to wait
 				 * for our own records to register until the host name is
@@ -202,11 +204,11 @@ void avahiClientCallback( AvahiClient *client, AvahiClientState state, void* use
 				break;
 
 			case AVAHI_CLIENT_CONNECTING:
-				POWERMON_LOGGER(AVAHI, DEBUG, "Received Avahi state change (AVAHI_CLIENT_CONNECTING).\n", 0);
+				POWERMON_LOGGER(AVAHI, INFO, "Received Avahi state change (AVAHI_CLIENT_CONNECTING).\n", 0);
 				break;
 
 			default:
-				POWERMON_LOGGER(AVAHI, DEBUG, "Received Avahi state change (Unknown).\n", 0);
+				POWERMON_LOGGER(AVAHI, WARN, "Received Avahi state change (Unknown).\n", 0);
 				break;
 		}
 	}
@@ -234,7 +236,7 @@ int registerPowerMonSvc(void)
 
     	if (avahiClient)
     	{
-    		POWERMON_LOGGER(AVAHI, DEBUG, "Avahi client creation succeeded.\n",0);
+    		POWERMON_LOGGER(AVAHI, INFO, "Avahi client creation succeeded.\n",0);
         	rc = 0;
     	}
     	else

@@ -98,7 +98,7 @@ static msg_q_status_e send_msg(char *message, pwr_mon_msg_id_e msg_id)
 	if (status != msg_q_status_success)
 		POWERMON_LOGGER(CONSOLE_IO, FATAL, "Bad return from msg_q_rcv.\n",0);
 	else
-		POWERMON_LOGGER(CONSOLE_IO, INFO, "Message sent to user io client.\n",0);
+		POWERMON_LOGGER(CONSOLE_IO, DEBUG, "Message sent to user io client.\n",0);
 
 	return status;
 }
@@ -145,7 +145,7 @@ void* console_io_thread(void *arg)
 		char *kbd_input_str;
 
 		/* Wait on keyboard input */
-		POWERMON_LOGGER(CONSOLE_IO, INFO, "Waiting to receive console input.\n", 0);
+		POWERMON_LOGGER(CONSOLE_IO, DEBUG, "Waiting to receive console input.\n", 0);
 
 		kbd_input_str = console_read_kbd();
 

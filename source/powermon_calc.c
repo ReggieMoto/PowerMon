@@ -274,7 +274,7 @@ void activeNodeCheck(Packet *packet)
 
 				activeNodes.nodeCount+=1;
 
-				POWERMON_LOGGER(CALC, DEBUG, "Added node %015llu-%04d to activeNode array.\n",
+				POWERMON_LOGGER(CALC, INFO, "Added node %015llu-%04d to activeNode array.\n",
 						packet->node.serialNumber.mfgId, packet->node.serialNumber.nodeId);
 			}
 		}
@@ -298,7 +298,7 @@ void activeNodeCheck(Packet *packet)
 
 		activeNodes.nodeCount+=1;
 
-		POWERMON_LOGGER(CALC, DEBUG, "Added node %015llu-%04d to activeNode array.\n",
+		POWERMON_LOGGER(CALC, INFO, "Added node %015llu-%04d to activeNode array.\n",
 				packet->node.serialNumber.mfgId, packet->node.serialNumber.nodeId);
 	}
 }
@@ -359,7 +359,7 @@ void removeActiveNode(unsigned int index)
 {
 	if (index < activeNodes.nodeCount)
 	{
-		POWERMON_LOGGER(CALC, DEBUG, "Removing node %015llu-%04d:%d.\n",
+		POWERMON_LOGGER(CALC, INFO, "Removing node %015llu-%04d:%d.\n",
 				activeNodes.activeNode[index].serialNumber.mfgId,
 				activeNodes.activeNode[index].serialNumber.nodeId,
 				activeNodes.activeNode[index].nodeIp);
@@ -375,7 +375,7 @@ void removeActiveNode(unsigned int index)
 		activeNodes.nodeCount-=1;
 	}
 	else
-		POWERMON_LOGGER(CALC, DEBUG, "Active node index (%d) too large.\n",index);
+		POWERMON_LOGGER(CALC, WARN, "Active node index (%d) too large.\n",index);
 }
 
 /* ========================================*/
@@ -527,7 +527,7 @@ void updateActiveNodeData(unsigned int array)
 			{
 				if (activeNode->nodeOn == TRUE) /* Did it just stop running? */
 				{
-					POWERMON_LOGGER(CALC, TRACE, "Active node %015llu-%04d just went idle. Update.\n",
+					POWERMON_LOGGER(CALC, INFO, "Active node %015llu-%04d just went idle. Update.\n",
 							activeNode->serialNumber.mfgId, activeNode->serialNumber.nodeId);
 
 					/* If so indicate it is no longer cooling and update */
@@ -543,7 +543,7 @@ void updateActiveNodeData(unsigned int array)
 			{
 				if (activeNode->nodeOn == FALSE) /* Did it just start running? */
 				{
-					POWERMON_LOGGER(CALC, TRACE, "Active node %015llu-%04d just started cooling. Update.\n",
+					POWERMON_LOGGER(CALC, INFO, "Active node %015llu-%04d just started cooling. Update.\n",
 							activeNode->serialNumber.mfgId, activeNode->serialNumber.nodeId);
 
 					/* If so indicate it is now cooling and update */
@@ -722,7 +722,7 @@ void doSystemPowerCalc(void)
 /* ========================================*/
 bool doPowerCalcAnalysis(void)
 {
-	POWERMON_LOGGER(CALC, TRACE, "Performing power consumption analysis from node data.\n",0);
+	POWERMON_LOGGER(CALC, INFO, "Performing power consumption analysis from node data.\n",0);
 
 	if (sysStatus.status == systemStatus_Learning)
 	{
@@ -751,7 +751,7 @@ bool doPowerCalcAnalysis(void)
 /* ========================================*/
 void doPowerCalc(void)
 {
-	POWERMON_LOGGER(CALC, TRACE, "Performing power calculations from node data.\n",0);
+	POWERMON_LOGGER(CALC, DEBUG, "Performing power calculations from node data.\n",0);
 
 	if (activeNodes.nodeCount)
 	{
@@ -792,7 +792,7 @@ void activeNodeHealthCheck(void)
 	{
 		activeNodes.activeNode[i].nodeQuietCount+=1;
 
-		POWERMON_LOGGER(CALC, TRACE, "Node %015llu-%04d: Quiet count: %d\n",
+		POWERMON_LOGGER(CALC, DEBUG, "Node %015llu-%04d: Quiet count: %d\n",
 				activeNodes.activeNode[i].serialNumber.mfgId,
 				activeNodes.activeNode[i].serialNumber.nodeId,
 				activeNodes.activeNode[i].nodeQuietCount);

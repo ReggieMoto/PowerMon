@@ -66,7 +66,7 @@ static msg_q_status_e send_msg(char *buffer, int buf_len, pwr_mon_msg_id_e id, m
 	if (status != msg_q_status_success)
 		POWERMON_LOGGER(USER_IO, FATAL, "Bad return from msg_q_rcv.\n",0);
 	else
-		POWERMON_LOGGER(USER_IO, INFO, "Message sent to %s client.\n", msg_dst);
+		POWERMON_LOGGER(USER_IO, DEBUG, "Message sent to %s client.\n", msg_dst);
 
 	return status;
 }
@@ -90,72 +90,72 @@ static void process_keypress(pwrmon_msg_t *msg)
 
 	case 'b':
 	case 'B':
-		POWERMON_LOGGER(USER_IO, INFO, "Received user keypress 'b'.\n", 0);
+		POWERMON_LOGGER(USER_IO, DEBUG, "Received user keypress 'b'.\n", 0);
 		user_io_fsm(user_io_input_key_b);
 		break;
 
 	case 'c':
 	case 'C':
-		POWERMON_LOGGER(USER_IO, INFO, "Received user keypress 'c'.\n", 0);
+		POWERMON_LOGGER(USER_IO, DEBUG, "Received user keypress 'c'.\n", 0);
 		user_io_fsm(user_io_input_key_c);
 		break;
 
 	case 'd':
 	case 'D':
-		POWERMON_LOGGER(USER_IO, INFO, "Received user keypress 'd'.\n", 0);
+		POWERMON_LOGGER(USER_IO, DEBUG, "Received user keypress 'd'.\n", 0);
 		user_io_fsm(user_io_input_key_d);
 		break;
 
 	case 'l':
 	case 'L':
-		POWERMON_LOGGER(USER_IO, INFO, "Received user keypress 'l'.\n", 0);
+		POWERMON_LOGGER(USER_IO, DEBUG, "Received user keypress 'l'.\n", 0);
 		user_io_fsm(user_io_input_key_l);
 		break;
 
 	case 'm':
 	case 'M':
-		POWERMON_LOGGER(USER_IO, INFO, "Received user keypress 'm'.\n", 0);
+		POWERMON_LOGGER(USER_IO, DEBUG, "Received user keypress 'm'.\n", 0);
 		user_io_fsm(user_io_input_key_m);
 		break;
 
 	case 'n':
 	case 'N':
-		POWERMON_LOGGER(USER_IO, INFO, "Received user keypress 'n'.\n", 0);
+		POWERMON_LOGGER(USER_IO, DEBUG, "Received user keypress 'n'.\n", 0);
 		user_io_fsm(user_io_input_key_n);
 		break;
 
 	case 'o':
 	case 'O':
-		POWERMON_LOGGER(USER_IO, INFO, "Received user keypress 'o'.\n", 0);
+		POWERMON_LOGGER(USER_IO, DEBUG, "Received user keypress 'o'.\n", 0);
 		user_io_fsm(user_io_input_key_o);
 		break;
 
 	case 'r':
 	case 'R':
-		POWERMON_LOGGER(USER_IO, INFO, "Received user keypress 'r'.\n", 0);
+		POWERMON_LOGGER(USER_IO, DEBUG, "Received user keypress 'r'.\n", 0);
 		user_io_fsm(user_io_input_key_r);
 		break;
 
 	case 't':
 	case 'T':
-		POWERMON_LOGGER(USER_IO, INFO, "Received user keypress 't'.\n", 0);
+		POWERMON_LOGGER(USER_IO, DEBUG, "Received user keypress 't'.\n", 0);
 		user_io_fsm(user_io_input_key_t);
 		break;
 
 	case 'u':
 	case 'U':
-		POWERMON_LOGGER(USER_IO, INFO, "Received user keypress 'u'.\n", 0);
+		POWERMON_LOGGER(USER_IO, DEBUG, "Received user keypress 'u'.\n", 0);
 		user_io_fsm(user_io_input_key_u);
 		break;
 
 	case 'x':
 	case 'X':
-		POWERMON_LOGGER(USER_IO, INFO, "Received user keypress 'x'.\n", 0);
+		POWERMON_LOGGER(USER_IO, DEBUG, "Received user keypress 'x'.\n", 0);
 		user_io_fsm(user_io_input_key_x);
 		break;
 
 	default:
-		POWERMON_LOGGER(USER_IO, INFO, "Received unhandled keypress (ignored).\n", 0);
+		POWERMON_LOGGER(USER_IO, DEBUG, "Received unhandled keypress (ignored).\n", 0);
 		break;
 	}
 }
@@ -174,7 +174,7 @@ static unsigned int process_received_msg(pwrmon_msg_t *msg, const char msgLen)
 	switch(msg->id) {
 
 	case pwr_mon_msg_id_exit:
-		POWERMON_LOGGER(USER_IO, INFO, "Received msg from %s client to exit thread.\n", msg_src);
+		POWERMON_LOGGER(USER_IO, DEBUG, "Received msg from %s client to exit thread.\n", msg_src);
 		thread_active = FALSE;
 		break;
 
@@ -190,12 +190,12 @@ static unsigned int process_received_msg(pwrmon_msg_t *msg, const char msgLen)
 	case pwr_mon_msg_id_kbd_input_str:
 		if (strlen(msg->data) == 1)
 		{
-			POWERMON_LOGGER(USER_IO, INFO, "Received keypress from %s client.\n", msg_src);
+			POWERMON_LOGGER(USER_IO, DEBUG, "Received keypress from %s client.\n", msg_src);
 			process_keypress(msg);
 		}
 		else if (strlen(msg->data) > 1)
 		{
-			POWERMON_LOGGER(USER_IO, INFO, "Received input string from %s client.\n", msg_src);
+			POWERMON_LOGGER(USER_IO, DEBUG, "Received input string from %s client.\n", msg_src);
 			user_io_fsm_process_string(msg);
 		}
 		else
@@ -204,7 +204,7 @@ static unsigned int process_received_msg(pwrmon_msg_t *msg, const char msgLen)
 		break;
 
 	default:
-		POWERMON_LOGGER(USER_IO, INFO, "Received unknown message from %s client.\n", msg_src);
+		POWERMON_LOGGER(USER_IO, WARN, "Received unknown message from %s client.\n", msg_src);
 		break;
 	}
 
@@ -247,7 +247,7 @@ void* user_io_thread(void *arg)
 			/* Wait on message queue */
 			memset(msg, 0, msgLen);
 
-			POWERMON_LOGGER(USER_IO, INFO, "Waiting on message queue receive.\n",0);
+			POWERMON_LOGGER(USER_IO, DEBUG, "Waiting on message queue receive.\n",0);
 			status = msg_q_rcv(msg_q_client_user_io, msg, &msgLen);
 			POWERMON_LOGGER(USER_IO, DEBUG, "Received message of len %d.\n", msgLen);
 

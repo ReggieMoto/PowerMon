@@ -57,8 +57,9 @@ typedef enum {
 	powermon_log_thread_count
 } powermon_log_thread_e;
 
-extern int powermon_logger_init(void);
-extern void powermon_logger(powermon_log_thread_e thread_id, powermon_log_level_e log_level, char *filename, int line_no, const char *format_str, ...);
+int powermon_logger_init(void);
+void powermon_logger_shutdown(void);
+void powermon_logger(powermon_log_thread_e thread_id, powermon_log_level_e log_level, char *filename, int line_no, const char *format_str, ...);
 
 #define POWERMON_LOGGER(TID,LVL,STR, ARGS...) powermon_logger(TID,LVL,__FILE__,__LINE__,STR,ARGS)
 

@@ -504,7 +504,7 @@ void user_io_fsm_process_string(pwrmon_msg_t *msg)
 			}
 			else
 			{
-				POWERMON_LOGGER(USER_IO, DEBUG, "Login credentials are not valid.\n", 0);
+				POWERMON_LOGGER(USER_IO, WARN, "Login credentials are not valid.\n", 0);
 				print_login_invalid();
 				user_io_fsm(user_io_input_login_invalid);
 			}

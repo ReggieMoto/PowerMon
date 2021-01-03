@@ -135,7 +135,7 @@ static msg_q_status_e send_msg(pwrmon_msg_t *msg, msg_q_client_e client)
 	if (status != msg_q_status_success)
 		POWERMON_LOGGER(DEV_IO, WARN, "Bad return from msg_q_send.\n",0);
 	else
-		POWERMON_LOGGER(DEV_IO, INFO, "Message sent to %s client.\n", msg_q_get_client_name(client));
+		POWERMON_LOGGER(DEV_IO, DEBUG, "Message sent to %s client.\n", msg_q_get_client_name(client));
 
 	return status;
 }

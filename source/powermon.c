@@ -79,7 +79,7 @@ static unsigned int process_received_msg(pwrmon_msg_t *msg, const char msgLen)
 
 	case pwr_mon_msg_id_credentials:
 
-		POWERMON_LOGGER(PWRMON, INFO, "Received user request from %s client containing login credentials.\n", msg_src);
+		POWERMON_LOGGER(PWRMON, DEBUG, "Received user request from %s client containing login credentials.\n", msg_src);
 
 		credentials_t *credentials = (credentials_t *)msg->data;
 		POWERMON_LOGGER(PWRMON, DEBUG, "username: %s\n", credentials->username);
@@ -93,7 +93,7 @@ static unsigned int process_received_msg(pwrmon_msg_t *msg, const char msgLen)
 
 	case pwr_mon_msg_id_device_io_data:
 
-		POWERMON_LOGGER(PWRMON, INFO, "Received user request from %s client containing power data.\n", msg_src);
+		POWERMON_LOGGER(PWRMON, DEBUG, "Received user request from %s client containing power data.\n", msg_src);
 		addToPollCycleData((Packet *)(msg->data));
 		break;
 
@@ -118,7 +118,7 @@ static unsigned int process_received_msg(pwrmon_msg_t *msg, const char msgLen)
 		break;
 
 	default:
-		POWERMON_LOGGER(PWRMON, DEBUG, "Received unhandled message from %s client.\n", msg_src);
+		POWERMON_LOGGER(PWRMON, WARN, "Received unhandled message from %s client.\n", msg_src);
 		thread_active = TRUE;
 		break;
 	}

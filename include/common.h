@@ -35,6 +35,7 @@ typedef unsigned int bool;
 
 #define MAX_POWERMON_NODES 48
 
-
+#define POWERMON_LOG_DIR "/home/PowerMon/log/"
+#define POWERMON_COREDUMP_DIR "/home/PowerMon/core/"
 
 #endif /* __COMMON_H__ */
