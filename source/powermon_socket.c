@@ -45,7 +45,7 @@ int createSocket(void)
 {
 	int rc;
 
-	// Create the UDP socket for connecting to server
+	/* Create the UDP socket for connecting to server */
 	srvrSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
 	if (srvrSocket == INVALID_SOCKET)

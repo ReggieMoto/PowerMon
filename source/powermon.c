@@ -79,11 +79,10 @@ static unsigned int process_received_msg(pwrmon_msg_t *msg, const char msgLen)
 
 	case pwr_mon_msg_id_credentials:
 
-		POWERMON_LOGGER(PWRMON, DEBUG, "Received user request from %s client containing login credentials.\n", msg_src);
+		POWERMON_LOGGER(PWRMON, DEBUG, "Received user request from %s client to validate credentials.\n", msg_src);
 
-		credentials_t *credentials = (credentials_t *)msg->data;
-		POWERMON_LOGGER(PWRMON, DEBUG, "username: %s\n", credentials->username);
-		POWERMON_LOGGER(PWRMON, DEBUG, "password: %s\n", credentials->password);
+		POWERMON_LOGGER(PWRMON, DEBUG, "username: %s\n", get_username());
+		POWERMON_LOGGER(PWRMON, DEBUG, "password: %s\n", get_password());
 
 		status = send_msg(msg, msg_q_client_data_store);
 		if (status != msg_q_status_success)

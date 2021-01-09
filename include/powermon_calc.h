@@ -60,4 +60,7 @@ typedef struct _pwrCalcSystemStatus {
 
 } PwrCalcSystemStatus;
 
+void consoleReportActiveNodes(void);
+void consoleReportSystemStatus(void);
+
 #endif /* __POWERMON_CALC_H__ */

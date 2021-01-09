@@ -28,6 +28,7 @@
 #include "common.h"
 #include "msg_queues.h"
 #include "pwr_mon_msg.h"
+#include "powermon_curses.h"
 #include "powermon_logger.h"
 #include "credentials.h"
 #include "sha3c.h"
@@ -81,13 +82,11 @@ static msg_q_status_e send_msg(pwrmon_msg_t *msg, msg_q_client_e client)
 /* =================================
  * validate_login_credentials
  */
-static unsigned int validate_login_credentials(char *username, unsigned char *hash)
+static unsigned int validate_login_credentials(const char *username, const unsigned char *hash)
 {
+	POWERMON_LOGGER(DSTORE, TRACE, "Function: validate_login_credentials\n", 0);
 
 	unsigned int login_valid = FALSE;
-
-	POWERMON_LOGGER(DSTORE, DEBUG, "SHA3_KECCAK_SPONGE_WORDS: %lu\n", SHA3_KECCAK_SPONGE_WORDS);
-	POWERMON_LOGGER(DSTORE, DEBUG, "sizeof(hash[SHA3_KECCAK_SPONGE_WORDS*8]): %lu\n", SHA3_KECCAK_SPONGE_WORDS*8);
 
 	for (int i=0; i<MAX_LOGIN_ACCOUNTS; i++)
 	{
@@ -99,22 +98,24 @@ static unsigned int validate_login_credentials(char *username, unsigned char *ha
 			(strcmp(loginAccounts.account[i].user, username) == 0) &&
 			(memcmp(loginAccounts.account[i].hash, hash, SHA3_HASH_LEN) == 0))
 		{
+			POWERMON_LOGGER(DSTORE, DEBUG, "Login is valid\n", 0);
 			login_valid = TRUE;
 			break;
 		}
 	}
 
 #if 0
-	printf("username: %s\n", username);
-	printf("hash:\t");
+	printw("username: %s\n", username);
+	printw("hash:\t");
 	for(int i=0, j=0; i<SHA3_KECCAK_SPONGE_WORDS*8; i++, j++)
 	{
 
-		printf("%02x", (unsigned char)*(hash+i));
-		if (j==7) printf(" ");
-		else if (j==15) { j=(-1); printf("\n\t"); }
+		printw("%02x", (unsigned char)*(hash+i));
+		if (j==7) printw(" ");
+		else if (j==15) { j=(-1); printw("\n\t"); }
 	}
-	printf("\n");
+	printw("\n");
+	refresh();
 #endif
 
 	return login_valid;
@@ -124,7 +125,7 @@ static unsigned int validate_login_credentials(char *username, unsigned char *ha
  * process_login_credentials
  */
 
-static unsigned int process_login_credentials(credentials_t *credentials)
+static unsigned int process_login_credentials(void)
 {
 	unsigned int login_valid = TRUE;
 	sha3_context ctxt;
@@ -132,13 +133,16 @@ static unsigned int process_login_credentials(credentials_t *credentials)
 
 	memset(&ctxt, 0, sizeof(sha3_context));
 
-    sha3_Init256(&ctxt);
-    sha3_Update(&ctxt, credentials->password, strlen(credentials->password));
-    hash = (uint8_t *)sha3_Finalize(&ctxt);
-    // 'hash' points to a buffer inside 'ctxt'
-    // with the value of SHA3-256
+	const char *password = get_password();
+	const char *username = get_username();
 
-    login_valid = validate_login_credentials(credentials->username, hash);
+    sha3_Init256(&ctxt);
+    sha3_Update(&ctxt, password, strlen(password));
+    hash = (uint8_t *)sha3_Finalize(&ctxt);
+    /* 'hash' points to a buffer inside 'ctxt' */
+    /* with the value of SHA3-256 */
+
+    login_valid = validate_login_credentials(username, hash);
 
 	return login_valid;
 }
@@ -157,18 +161,20 @@ static unsigned int process_received_msg(pwrmon_msg_t *msg, const char msgLen)
 
 	case pwr_mon_msg_id_credentials:
 
-		POWERMON_LOGGER(DSTORE, DEBUG, "Received msg from %s client containing login credentials.\n", msg_src);
+		POWERMON_LOGGER(DSTORE, DEBUG, "Received msg from %s client to validate login credentials.\n", msg_src);
 
-		credentials_t *credentials = (credentials_t *)msg->data;
-		POWERMON_LOGGER(DSTORE, DEBUG, "%s: username: %s\n", __FUNCTION__, credentials->username);
-		POWERMON_LOGGER(DSTORE, DEBUG, "%s: password: %s\n", __FUNCTION__, credentials->password);
-
-		login_valid = process_login_credentials(credentials);
+		login_valid = process_login_credentials();
 
 		if (login_valid)
-			credentials->valid = pwr_mon_credentials_valid;
+		{
+			POWERMON_LOGGER(DSTORE, TRACE, "Set credentials valid\n", 0);
+			set_credentials_valid();
+		}
 		else
-			credentials->valid = pwr_mon_credentials_invalid;
+		{
+			POWERMON_LOGGER(DSTORE, TRACE, "Set credentials invalid\n", 0);
+			set_credentials_invalid();
+		}
 
 		msg->type = pwr_mon_msg_type_rsp;
 		send_msg(msg, msg->src);

@@ -27,6 +27,7 @@
 #include <time.h>
 
 #include "powermon_calc.h"
+#include "powermon_curses.h"
 #include "powermon_time.h"
 #include "device_io_data.h"
 #include "powermon_pkt.h"
@@ -100,6 +101,8 @@ static const char *padStrings[] = {
 #else
 #define MAX_QUIET_REMOVE (60 * 24 * 3)	/* 60 mins x 24 hrs x 3 days */
 #endif
+
+#define CALC_INTERVAL 60
 
 void consoleCenterOutputLine(char *destBuf, char *srcBuf, int *prePadCount, int *postPadCount)
 {
@@ -198,7 +201,8 @@ void consoleReportActiveNodes(void)
 			consoleCenterOutputLine(consoleOut, workingBuf, &prePadCount, &postPadCount);
 
 			assert(strlen(consoleOut) < CONSOLE_MAX_BUF_LEN);
-			printf("%s\n",consoleOut);
+			printw("%s\n",consoleOut);
+			refresh();
 		}
 	}
 }
@@ -225,13 +229,14 @@ void consoleReportSystemStatus(void)
 	else
 		sysStatusStr = sysStatusActive;
 
-	printf("\t\t%s:\t%s\n", currentSysStatus, sysStatusStr);
-	printf("\t\t%s:\t%3d\n", numberOfOnNodes, sysStatus.onNodesCount);
-	printf("\t\t%s:\t%3d\n", avgNumOfOnNodes, sysStatus.runningOnNodesAverage);
-	printf("\t\t%s:\t%3d\n", numberOfOffNodes, sysStatus.offNodesCount);
-	printf("\t\t------------------------------------------\n");
-	printf("\t\t%s:\t%3d\n", currentAmpDraw, sysStatus.currentAmps);
-	printf("\t\t%s:\t%3d\n", averageAmpDraw, sysStatus.runningAmpsAverage);
+	printw("\t\t%s:\t%s\n", currentSysStatus, sysStatusStr);
+	printw("\t\t%s:\t%3d\n", numberOfOnNodes, sysStatus.onNodesCount);
+	printw("\t\t%s:\t%3d\n", avgNumOfOnNodes, sysStatus.runningOnNodesAverage);
+	printw("\t\t%s:\t%3d\n", numberOfOffNodes, sysStatus.offNodesCount);
+	printw("\t\t------------------------------------------\n");
+	printw("\t\t%s:\t%3d\n", currentAmpDraw, sysStatus.currentAmps);
+	printw("\t\t%s:\t%3d\n", averageAmpDraw, sysStatus.runningAmpsAverage);
+	refresh();
 }
 
 /* ========================================*/
@@ -241,8 +246,8 @@ void consoleReportSystemStatus(void)
 /* ========================================*/
 void activeNodeCheck(Packet *packet)
 {
-	// Look whether we've seen this node before.
-	// If not, add it to the active node array.
+	/* Look whether we've seen this node before. */
+	/* If not, add it to the active node array. */
 	bool nodeFound = FALSE;
 
 	if (activeNodes.nodeCount)
@@ -263,7 +268,7 @@ void activeNodeCheck(Packet *packet)
 
 			if (!nodeFound)
 			{
-				// Add node to the array
+				/* Add node to the array */
 				ActiveNode *activeNode = &activeNodes.activeNode[activeNodes.nodeCount];
 				memset((void *)activeNode, 0, sizeof(ActiveNode));
 
@@ -280,14 +285,14 @@ void activeNodeCheck(Packet *packet)
 		}
 		else
 		{
-			// Array is full
+			/* Array is full */
 			POWERMON_LOGGER(CALC, WARN, "activeNode array is full.\n",0);
 		}
 	}
 	else
 	{
-		// First active node into array
-		// Add node to the array
+		/* First active node into array */
+		/* Add node to the array */
 		ActiveNode *activeNode = &activeNodes.activeNode[activeNodes.nodeCount];
 		memset((void *)activeNode, 0, sizeof(ActiveNode));
 
@@ -850,7 +855,7 @@ void* powermon_calc_thread_proc(void* arg)
 	do {
 		static unsigned int processArray;
 
-		sleep(60); /* Once a minute */
+		sleep(CALC_INTERVAL); /* Once a minute */
 
 		pthread_mutex_lock(&pwrmonActiveDataArrayMutex);
 

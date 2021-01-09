@@ -1,8 +1,8 @@
 /* ============================================================== */
 /*
- * common.h
+ * add_user_ctxt.h
  *
- * Copyright (c) 2017 David Hammond
+ * Copyright (c) 2020 David Hammond
  * All Rights Reserved.
  */
 /* ============================================================== */
@@ -18,26 +18,9 @@
  */
 /* ============================================================== */
 
-#ifndef __COMMON_H__
-#define __COMMON_H__
+#ifndef __INCLUDE_ADD_USER_CTXT_H__
+#define __INCLUDE_ADD_USER_CTXT_H__
 
-#ifndef TRUE
-#define TRUE (1==1)
-#endif
-#ifndef FALSE
-#define FALSE (1==0)
-#endif
+void add_user_context(void);
 
-#define SUCCESS 0
-#define FAILURE -1
-
-#define MAX_KBD_INPUT_STR_LEN 32
-
-#define SRC_ADDR_LEN 14;
-
-#define MAX_POWERMON_NODES 48
-
-#define POWERMON_LOG_DIR "/home/PowerMon/log/"
-#define POWERMON_COREDUMP_DIR "/home/PowerMon/core/"
-
-#endif /* __COMMON_H__ */
+#endif /* __INCLUDE_ADD_USER_CTXT_H__ */

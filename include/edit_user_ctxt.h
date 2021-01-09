@@ -1,8 +1,8 @@
 /* ============================================================== */
 /*
- * login.c
+ * edit_user_ctxt.h
  *
- * Copyright (c) 2017 David Hammond
+ * Copyright (c) 2020 David Hammond
  * All Rights Reserved.
  */
 /* ============================================================== */
@@ -18,31 +18,9 @@
  */
 /* ============================================================== */
 
-#include <stdio.h>
+#ifndef __INCLUDE_EDIT_USER_CTXT_H__
+#define __INCLUDE_EDIT_USER_CTXT_H__
 
-void print_login_username(void)
-{
-	printf("\tusername: ");
-	fflush(stdout);
-}
+void edit_user_context(void);
 
-void print_login_password(void)
-{
-	printf("\tpassword: ");
-	fflush(stdout);
-}
-
-void print_login_invalid(void)
-{
-	printf("\tLogin credentials invalid.\n");
-	fflush(stdout);
-}
-
-void login_screen(void)
-{
-	printf("\n\n");
-	printf("\t ======================\n");
-	printf("\t|    PowerMon Login    |\n");
-	printf("\t ======================\n");
-	fflush(stdout);
-}
+#endif /* __INCLUDE_EDIT_USER_CTXT_H__ */

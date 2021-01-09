@@ -1,9 +1,10 @@
 /* ============================================================== */
 /*
- * common.h
+ * powermon_curses.h
  *
- * Copyright (c) 2017 David Hammond
+ * Copyright (c) 2020 David Hammond
  * All Rights Reserved.
+ *
  */
 /* ============================================================== */
 /*
@@ -18,26 +19,13 @@
  */
 /* ============================================================== */
 
-#ifndef __COMMON_H__
-#define __COMMON_H__
 
-#ifndef TRUE
-#define TRUE (1==1)
-#endif
-#ifndef FALSE
-#define FALSE (1==0)
-#endif
+#include "ncurses.h"
 
-#define SUCCESS 0
-#define FAILURE -1
+#ifndef __POWERMON_CURSES_H__
+#define __POWERMON_CURSES_H__
 
-#define MAX_KBD_INPUT_STR_LEN 32
+int initialize_curses(void);
+void close_curses(void);
 
-#define SRC_ADDR_LEN 14;
-
-#define MAX_POWERMON_NODES 48
-
-#define POWERMON_LOG_DIR "/home/PowerMon/log/"
-#define POWERMON_COREDUMP_DIR "/home/PowerMon/core/"
-
-#endif /* __COMMON_H__ */
+#endif /* __POWERMON_CURSES_H__ */

@@ -28,6 +28,7 @@
 #include "common.h"
 #include "msg_queues.h"
 #include "pwr_mon_msg.h"
+#include "powermon_curses.h"
 #include "powermon_logger.h"
 #include "credentials.h"
 
@@ -37,6 +38,10 @@ sem_t powermon_login_sem;
 unsigned int login_successful = FALSE;
 
 extern credentials_t * powermon_login(void);
+
+#define KEYPRESS_LF  0x0au
+#define KEYPRESS_BS  0x08u
+#define KEYPRESS_DEL 0x7fu
 
 #if 0
 /* =================================
@@ -76,6 +81,8 @@ static msg_q_status_e send_msg(char *message, pwr_mon_msg_id_e msg_id)
 	pwrmon_msg_t msg;
 	unsigned int msgLen = sizeof(pwrmon_msg_t);
 
+	POWERMON_LOGGER(CONSOLE_IO, TRACE, "Function: send_msg\n",0);
+
 	memset((char *)&msg, 0, msgLen);
 
 	/* Prepare the msg q header */
@@ -112,19 +119,48 @@ char * console_read_kbd(void)
 	static char strBuffer[MAX_KBD_INPUT_STR_LEN];
 	unsigned int strIndex = 0;
 
+	POWERMON_LOGGER(CONSOLE_IO, TRACE, "Function: console_read_kbd\n",0);
+
 	memset(strBuffer, 0, MAX_KBD_INPUT_STR_LEN);
 
 	do {
-		keypress = fgetc(stdin);
+
+		keypress = getch();
 
 		POWERMON_LOGGER(CONSOLE_IO, DEBUG, "Received keypress %d: 0x%2x.\n", strIndex, keypress);
 
-		if ((strIndex == MAX_KBD_INPUT_STR_LEN-1) || (keypress == 0x0a))
-			strBuffer[strIndex++] = 0x00;
-		else
-			strBuffer[strIndex++] = keypress;
+		if ((strIndex == MAX_KBD_INPUT_STR_LEN-1) || (keypress == KEYPRESS_LF))
+		{
+			if (strIndex > 0)
+			{
+				strBuffer[strIndex] = 0x00; /* NULL terminate the buffer */
+				printw("%c", keypress);
+				refresh();
+			}
+		}
+#if 0
+		else if (((keypress == KEYPRESS_DEL) || (KEYPRESS_BS)) && (strIndex > 0))
+		{
 
-	} while ((strIndex < MAX_KBD_INPUT_STR_LEN) && (keypress != 0x0a));
+			/* Remove the keypress from the strBuffer */
+			strBuffer[strIndex] = 0x00;
+			strIndex--;
+
+			/* Tell curses that the character is being erased */
+			delch();
+			printw(" ");
+			refresh();
+
+		}
+#endif
+		else
+		{
+			strBuffer[strIndex++] = keypress;
+			printw("%c", keypress);
+			refresh();
+		}
+
+	} while ((strIndex < MAX_KBD_INPUT_STR_LEN) && (keypress != KEYPRESS_LF));
 
 	POWERMON_LOGGER(CONSOLE_IO, DEBUG, "string: \"%s\"; length: %d\n", strBuffer, strlen(strBuffer));
 

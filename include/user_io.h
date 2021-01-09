@@ -23,7 +23,11 @@
 #include <semaphore.h>
 #include <pthread.h>
 
+#include "credentials.h"
+
 pthread_t get_user_io_tid(void);
 void user_io_thread_create(sem_t *sem);
+void user_io_send_credentials(credentials_t *credentials);
+void user_io_send_exit_msg(void);
 
 #endif /* __USER_IO_H__ */

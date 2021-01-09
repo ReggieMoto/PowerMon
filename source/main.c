@@ -32,6 +32,7 @@
 
 #include "common.h"
 #include "msg_queues.h"
+#include "powermon_curses.h"
 #include "powermon_logger.h"
 #include "powermon_time.h"
 #include "powermon_svc.h"
@@ -91,11 +92,21 @@ int main(int argc, char *argv[])
 		}
 #endif
 
+	status = initialize_curses();
+
+	if (status < 0)
+	{
+		printf("Failed to initialize curses. Exiting.\n");
+		goto exit;
+	}
+
 	status = powermon_logger_init();
 
 	if (status < 0)
 	{
-		printf("Failed to open logger.\n");
+		printw("Failed to open logger.\n");
+		refresh();
+		close_curses();
 		goto exit;
 	}
 
@@ -136,21 +147,25 @@ int main(int argc, char *argv[])
 	sem_post(&device_io_sem);
 	sem_post(&data_store_sem);
 
-	/* Wait here to join all active threads upon exit */
-	pthread_join(get_avahi_svc_tid(), (void**)NULL);
-	pthread_join(get_powermon_tid(), (void**)NULL);
-	pthread_join(get_user_io_tid(), (void**)NULL);
-	pthread_join(get_device_io_tid(), (void**)NULL);
-	pthread_join(get_data_store_tid(), (void**)NULL);
-
 	/*
 	 * As this is an embedded system we should never reach here.
 	 */
+	void *end;
+
+	/* Wait here to join all active threads upon exit */
+	pthread_join(get_avahi_svc_tid(), &end);
+	pthread_join(get_powermon_tid(), &end);
+	pthread_join(get_user_io_tid(), &end);
+	pthread_join(get_device_io_tid(), &end);
+	pthread_join(get_data_store_tid(), &end);
 
 	POWERMON_LOGGER(MAIN, THREAD, "All PowerMon threads terminated.\n\n",0);
 
 	powermon_logger_shutdown();
 
+	close_curses();
+
 exit:
+
 	return 0;
 }
