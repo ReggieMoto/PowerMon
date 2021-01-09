@@ -21,6 +21,7 @@
 #ifndef __POWERMON_SOCKET_H__
 #define __POWERMON_SOCKET_H__
 
+#include <stdbool.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>

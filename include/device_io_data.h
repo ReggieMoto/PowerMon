@@ -26,6 +26,7 @@
 #ifndef __DEVICE_IO_DATA_H__
 #define __DEVICE_IO_DATA_H__
 
+#include <stdbool.h>
 #include <time.h>
 #include "common.h"
 #include "powermon_pkt.h"

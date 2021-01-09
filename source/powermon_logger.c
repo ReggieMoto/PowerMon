@@ -29,6 +29,7 @@
 #include <unistd.h>
 
 #include "common.h"
+#include "powermon_curses.h"
 #include "powermon_logger.h"
 
 static powermon_log_level_e global_log_level;
@@ -68,7 +69,8 @@ static int logger_open_logfile(void)
 	snprintf(fname, LOG_FNAME_MAX-1, LOG_FNAME_STRING, getpid(), (int)t);
 	strncat(fqname, fname, remaining-1);
 
-	printf("Opening logfile: %s\n", fqname);
+	printw("Opening logfile: %s\n", fqname);
+	refresh();
 
 	logfd = fopen(fqname, "w");
 	filesize = 0;
@@ -87,7 +89,9 @@ static int logger_close_logfile(void)
 
 	if (logfd != NULL)
 	{
-		printf("Closing logfile\n");
+		printw("Closing logfile\n");
+		refresh();
+
 		status = fclose(logfd);
 	}
 
@@ -127,7 +131,10 @@ static int logger_log_entry(char *log_entry)
 	}
 
 	if (status == 0)
-		printf("Error writing to log file\n");
+	{
+		printw("Error writing to log file\n");
+		refresh();
+	}
 
 	return status;
 }
@@ -221,7 +228,7 @@ char * get_logger_thread_str(powermon_log_thread_e thread_id)
 	switch(thread_id)
 	{
 	case MAIN:
-		thread_str = "MAIN\t\t";
+		thread_str = "MAIN\t";
 		break;
 	case PWRMON:
 		thread_str = "PWRMON\t";
@@ -242,16 +249,16 @@ char * get_logger_thread_str(powermon_log_thread_e thread_id)
 		thread_str = "DSTORE\t";
 		break;
 	case MSGQ:
-		thread_str = "MSGQ\t\t";
+		thread_str = "MSGQ\t";
 		break;
 	case AVAHI:
-		thread_str = "AVAHI\t\t";
+		thread_str = "AVAHI\t";
 		break;
 	case CALC:
-		thread_str = "CALC\t\t";
+		thread_str = "CALC\t";
 		break;
 	default:
-		thread_str = "UNK  \t";
+		thread_str = "UNK\t";
 		break;
 	}
 
@@ -317,15 +324,17 @@ int powermon_logger_init(void)
 
 	if (status >= 0)
 	{
-		printf(LOG_STARTUP_STRING, getpid(), tm.tm_year + 1900, tm.tm_mon + 1,
+		printw(LOG_STARTUP_STRING, getpid(), tm.tm_year + 1900, tm.tm_mon + 1,
 				tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
+		refresh();
 
-		set_logger_level(INFO);
+		set_logger_level(TRACE);
 		set_logger_thread(ALL);
 	}
 	else
 	{
-		printf("Unable to open logfile.");
+		printw("Unable to open logfile.");
+		refresh();
 	}
 
 	return status;

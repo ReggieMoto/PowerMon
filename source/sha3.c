@@ -23,6 +23,7 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "powermon_curses.h"
 #include "sha3c.h"
 
 #define SHA3_ASSERT( x )
@@ -34,7 +35,7 @@
 #define SHA3_TRACE_BUF(format, buf, l, args...)
 #endif
 
-//#define SHA3_USE_KECCAK
+/* #define SHA3_USE_KECCAK */
 /* 
  * Define SHA3_USE_KECCAK to run "pure" Keccak, as opposed to SHA3.
  * The tests that this macro enables use the input and output from [Keccak]
@@ -406,8 +407,9 @@ main()
                     "\xca\xed\xc0\x44\x69\x6a\x16\x88"
                     "\x70\x54\x9a\x6a\x7f\x6f\x56\x96"
                     "\x1e\x84\xa5\x4b\xd9\x97\x0b\x8a", 256 / 8) != 0) {
-        printf("SHA3-256(cc) "
+        printw("SHA3-256(cc) "
                 "doesn't match known answer (single buffer)\n");
+        refresh();
         return 11;
     }
 
@@ -418,8 +420,9 @@ main()
                     "\x1a\x79\x5a\xd9\xe1\xea\x21\x22"
                     "\xb4\x07\xba\xf9\xaa\xbc\xb9\xe1"
                     "\x8b\x57\x17\xb7\x87\x35\x37\xd2", 256 / 8) != 0) {
-        printf("SHA3-256(41fb) "
+        printw("SHA3-256(41fb) "
                 "doesn't match known answer (single buffer)\n");
+        refresh();
         return 12;
     }
 
@@ -432,8 +435,9 @@ main()
                     "\xac\x0e\x6a\x10\x8b\x84\x2e\xd0"
                     "\xf1\xd3\x24\x97\x12\xf5\x8e\xe0"
                     "\xdd\xf9\x56\xfe\x33\x2a\x5f\x95", 256 / 8) != 0) {
-        printf("SHA3-256(52a6...76) "
+        printw("SHA3-256(52a6...76) "
                 "doesn't match known answer (single buffer)\n");
+        refresh();
         return 13;
     }
 
@@ -456,8 +460,9 @@ main()
                     "\x99\x22\x16\x58\xf8\x01\xd4\x5c"
                     "\x29\x4d\x90\x06\xee\x9f\x3f\x9d"
                     "\x41\x9c\x8d\x42\x77\x48\xdc\x41", 256 / 8) != 0) {
-        printf("SHA3-256(433C...CE) "
+        printw("SHA3-256(433C...CE) "
                 "doesn't match known answer (single buffer)\n");
+        refresh();
         return 14;
     }
 
@@ -475,8 +480,9 @@ main()
                     "\x2b\x54\x70\xd4\xad\xe9\xf3\xa3"
                     "\x56\xa3\xe4\x02\x17\x48\x69\x0a"
                     "\x95\x83\x72\xe2\xb0\x6f\x82\xa4", 256 / 8) != 0) {
-        printf("SHA3-256( abcdefgh...[16777216 times] ) "
+        printw("SHA3-256( abcdefgh...[16777216 times] ) "
                 "doesn't match known answer\n");
+        refresh();
         return 15;
     }
 #else                           /* SHA3 testing begins */
@@ -485,7 +491,8 @@ main()
     sha3_Init256(&c);
     hash = sha3_Finalize(&c);
     if(memcmp(sha3_256_empty, hash, sizeof(sha3_256_empty)) != 0) {
-        printf("SHA3-256() doesn't match known answer\n");
+        printw("SHA3-256() doesn't match known answer\n");
+        refresh();
         return 1;
     }
 
@@ -495,8 +502,9 @@ main()
     hash = sha3_Finalize(&c);
     if(memcmp(sha3_256_0xa3_200_times, hash,
                     sizeof(sha3_256_0xa3_200_times)) != 0) {
-        printf("SHA3-256( 0xa3 ... [200 times] ) "
+        printw("SHA3-256( 0xa3 ... [200 times] ) "
                 "doesn't match known answer (1 buffer)\n");
+        refresh();
         return 1;
     }
 
@@ -507,8 +515,9 @@ main()
     hash = sha3_Finalize(&c);
     if(memcmp(sha3_256_0xa3_200_times, hash,
                     sizeof(sha3_256_0xa3_200_times)) != 0) {
-        printf("SHA3-256( 0xa3 ... [200 times] ) "
+        printw("SHA3-256( 0xa3 ... [200 times] ) "
                 "doesn't match known answer (2 steps)\n");
+        refresh();
         return 2;
     }
 
@@ -521,8 +530,9 @@ main()
     hash = sha3_Finalize(&c);
     if(memcmp(sha3_256_0xa3_200_times, hash,
                     sizeof(sha3_256_0xa3_200_times)) != 0) {
-        printf("SHA3-256( 0xa3 ... [200 times] ) "
+        printw("SHA3-256( 0xa3 ... [200 times] ) "
                 "doesn't match known answer (200 steps)\n");
+        refresh();
         return 3;
     }
 
@@ -552,7 +562,8 @@ main()
                     "\x4e\x82\x3d\x59\x77\x98\xaa\x18"
                     "\xbe\x9b\x7c\x73\x6b\x80\x59\xab"
                     "\xfd\x67\x79\xac\x35\xac\x81\xb5", 256 / 8) != 0) {
-        printf("SHA3-256( b771 ... ) doesn't match the known answer\n");
+        printw("SHA3-256( b771 ... ) doesn't match the known answer\n");
+        refresh();
         return 4;
     }
 
@@ -562,8 +573,9 @@ main()
     hash = sha3_Finalize(&c);
     if(memcmp(sha3_384_0xa3_200_times, hash,
                     sizeof(sha3_384_0xa3_200_times)) != 0) {
-        printf("SHA3-384( 0xa3 ... [200 times] ) "
+        printw("SHA3-384( 0xa3 ... [200 times] ) "
                 "doesn't match known answer (1 buffer)\n");
+        refresh();
         return 5;
     }
 
@@ -574,8 +586,9 @@ main()
     hash = sha3_Finalize(&c);
     if(memcmp(sha3_384_0xa3_200_times, hash,
                     sizeof(sha3_384_0xa3_200_times)) != 0) {
-        printf("SHA3-384( 0xa3 ... [200 times] ) "
+        printw("SHA3-384( 0xa3 ... [200 times] ) "
                 "doesn't match known answer (2 steps)\n");
+        refresh();
         return 6;
     }
 
@@ -588,8 +601,9 @@ main()
     hash = sha3_Finalize(&c);
     if(memcmp(sha3_384_0xa3_200_times, hash,
                     sizeof(sha3_384_0xa3_200_times)) != 0) {
-        printf("SHA3-384( 0xa3 ... [200 times] ) "
+        printw("SHA3-384( 0xa3 ... [200 times] ) "
                 "doesn't match known answer (200 steps)\n");
+        refresh();
         return 7;
     }
 
@@ -599,8 +613,9 @@ main()
     hash = sha3_Finalize(&c);
     if(memcmp(sha3_512_0xa3_200_times, hash,
                     sizeof(sha3_512_0xa3_200_times)) != 0) {
-        printf("SHA3-512( 0xa3 ... [200 times] ) "
+        printw("SHA3-512( 0xa3 ... [200 times] ) "
                 "doesn't match known answer (1 buffer)\n");
+        refresh();
         return 8;
     }
 
@@ -611,8 +626,9 @@ main()
     hash = sha3_Finalize(&c);
     if(memcmp(sha3_512_0xa3_200_times, hash,
                     sizeof(sha3_512_0xa3_200_times)) != 0) {
-        printf("SHA3-512( 0xa3 ... [200 times] ) "
+        printw("SHA3-512( 0xa3 ... [200 times] ) "
                 "doesn't match known answer (2 steps)\n");
+        refresh();
         return 9;
     }
 
@@ -625,13 +641,15 @@ main()
     hash = sha3_Finalize(&c);
     if(memcmp(sha3_512_0xa3_200_times, hash,
                     sizeof(sha3_512_0xa3_200_times)) != 0) {
-        printf("SHA3-512( 0xa3 ... [200 times] ) "
+        printw("SHA3-512( 0xa3 ... [200 times] ) "
                 "doesn't match known answer (200 steps)\n");
+        refresh();
         return 10;
     }
 #endif
 
-    printf("SHA3-256, SHA3-384, SHA3-512 tests passed OK\n");
+    printw("SHA3-256, SHA3-384, SHA3-512 tests passed OK\n");
+    refresh();
 
     return 0;
 }

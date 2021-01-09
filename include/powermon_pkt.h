@@ -52,8 +52,8 @@ typedef struct _serialno {
 typedef struct _node {
 	SerialNumber_t serialNumber;
 	unsigned int nodeIp;
-	Mode_e mode;	// Auto = 1(default)/Off = 0
-	Operation_e operation;	// Normal = 1 (default)/Defrost = 0
+	Mode_e mode;	/* Auto = 1(default)/Off = 0 */
+	Operation_e operation;	/* Normal = 1 (default)/Defrost = 0 */
 } Node;
 
 typedef struct _nodeData

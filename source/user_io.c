@@ -26,10 +26,11 @@
 #include <semaphore.h>
 
 #include "common.h"
-#include "msg_queues.h"
-#include "pwr_mon_msg.h"
-#include "powermon_logger.h"
 #include "credentials.h"
+#include "login_ctxt.h"
+#include "msg_queues.h"
+#include "powermon_logger.h"
+#include "pwr_mon_msg.h"
 #include "user_io_fsm.h"
 
 extern pthread_t console_io_thread_create(unsigned int *console_io_thread_active);
@@ -51,6 +52,8 @@ static msg_q_status_e send_msg(char *buffer, int buf_len, pwr_mon_msg_id_e id, m
 	msg_q_status_e status;
 	char *msg_dst = msg_q_get_client_name(client);
 	unsigned int msgLen = sizeof(pwrmon_msg_t);
+
+	POWERMON_LOGGER(USER_IO, TRACE, "Function: send_msg\n", 0);
 
 	/* Prepare the msg q header */
 	msg.src = msg_q_client_user_io;
@@ -78,7 +81,7 @@ void user_io_send_exit_msg(void)
 
 void user_io_send_credentials(credentials_t *credentials)
 {
-	send_msg((char *)credentials, sizeof(credentials_t), pwr_mon_msg_id_credentials, msg_q_client_data_store);
+	send_msg(NULL, 0, pwr_mon_msg_id_credentials, msg_q_client_data_store);
 }
 
 /* =================================
@@ -86,6 +89,8 @@ void user_io_send_credentials(credentials_t *credentials)
  */
 static void process_keypress(pwrmon_msg_t *msg)
 {
+	POWERMON_LOGGER(USER_IO, TRACE, "Function: process_keypress\n", 0);
+
 	switch(msg->data[0]) {
 
 	case 'b':
@@ -104,6 +109,12 @@ static void process_keypress(pwrmon_msg_t *msg)
 	case 'D':
 		POWERMON_LOGGER(USER_IO, DEBUG, "Received user keypress 'd'.\n", 0);
 		user_io_fsm(user_io_input_key_d);
+		break;
+
+	case 'e':
+	case 'E':
+		POWERMON_LOGGER(USER_IO, DEBUG, "Received user keypress 'e'.\n", 0);
+		user_io_fsm(user_io_input_key_e);
 		break;
 
 	case 'l':
@@ -128,6 +139,12 @@ static void process_keypress(pwrmon_msg_t *msg)
 	case 'O':
 		POWERMON_LOGGER(USER_IO, DEBUG, "Received user keypress 'o'.\n", 0);
 		user_io_fsm(user_io_input_key_o);
+		break;
+
+	case 'p':
+	case 'P':
+		POWERMON_LOGGER(USER_IO, DEBUG, "Received user keypress 'p'.\n", 0);
+		user_io_fsm(user_io_input_key_p);
 		break;
 
 	case 'r':
@@ -155,7 +172,8 @@ static void process_keypress(pwrmon_msg_t *msg)
 		break;
 
 	default:
-		POWERMON_LOGGER(USER_IO, DEBUG, "Received unhandled keypress (ignored).\n", 0);
+		POWERMON_LOGGER(USER_IO, DEBUG, "Received unhandled keypress.\n", 0);
+		user_io_fsm(user_io_input_unhandled);
 		break;
 	}
 }
@@ -169,7 +187,8 @@ static unsigned int process_received_msg(pwrmon_msg_t *msg, const char msgLen)
 	unsigned int thread_active = TRUE;
 	msg_q_client_e src = msg->src;
 	char *msg_src = msg_q_get_client_name(src);
-	credentials_t *credentials;
+
+	POWERMON_LOGGER(USER_IO, TRACE, "Function: process_received_msg\n", 0);
 
 	switch(msg->id) {
 
@@ -179,11 +198,17 @@ static unsigned int process_received_msg(pwrmon_msg_t *msg, const char msgLen)
 		break;
 
 	case pwr_mon_msg_id_credentials:
-		credentials = (credentials_t *)msg->data;
-		if (credentials->valid == pwr_mon_credentials_valid)
+
+		if (are_credentials_valid() == true)
+		{
+			POWERMON_LOGGER(USER_IO, DEBUG, "Login credentials are valid.\n", 0);
 			user_io_fsm(user_io_input_login_valid);
+		}
 		else
+		{
+			POWERMON_LOGGER(USER_IO, DEBUG, "Login credentials are invalid.\n", 0);
 			user_io_fsm(user_io_input_login_invalid);
+		}
 
 		break;
 
@@ -238,7 +263,11 @@ void* user_io_thread(void *arg)
 		sem_wait(sem);
 		POWERMON_LOGGER(USER_IO, THREAD, "%s is alive.\n", __FUNCTION__);
 		console_io_tid = console_io_thread_create(&console_thread_active);
-		user_io_fsm(user_io_input_login_start);
+
+		/* Initialize the user I/O FSM */
+		user_io_fsm_init();
+		/* Establish the initial context: login */
+		login_context();
 
 		do {
 			static char msg[MAX_MESSAGE_SIZE];
