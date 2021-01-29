@@ -71,7 +71,6 @@ int main(int argc, char *argv[])
 	signal(SIGSEGV, sighandler);
 	time_t tm = getPwrmonSystemStartTime();
 
-#if 1
 	/* Create working directories */
 	struct stat st = {0};
 
@@ -90,7 +89,6 @@ int main(int argc, char *argv[])
 			printf("Unable to create core directory.\n\n");
 			exit(1);
 		}
-#endif
 
 	status = initialize_curses();
 
@@ -167,5 +165,5 @@ int main(int argc, char *argv[])
 
 exit:
 
-	return 0;
+	return (0);
 }

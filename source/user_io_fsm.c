@@ -47,7 +47,7 @@ static const char *user_io_fsm_state_str[] = {
 
 static const char * get_user_io_fsm_state_str(user_io_state_e state)
 {
-	return user_io_fsm_state_str[state];
+	return (user_io_fsm_state_str[state]);
 }
 
 static const char *user_io_fsm_input_str[] = {
@@ -74,7 +74,7 @@ static const char *user_io_fsm_input_str[] = {
 
 static const char * get_user_io_fsm_input_str(user_io_input_e input)
 {
-	return user_io_fsm_input_str[input];
+	return (user_io_fsm_input_str[input]);
 }
 
 

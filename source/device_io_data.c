@@ -137,7 +137,7 @@ static msg_q_status_e send_msg(pwrmon_msg_t *msg, msg_q_client_e client)
 	else
 		POWERMON_LOGGER(DEV_IO, DEBUG, "Message sent to %s client.\n", msg_q_get_client_name(client));
 
-	return status;
+	return (status);
 }
 
 /* ========================================*/
@@ -186,7 +186,7 @@ void* device_io_data_thread(void *arg)
 
 	pthread_exit((void *)NULL);
 
-	return (void *)NULL;
+	return ((void *)NULL);
 }
 
 /* ========================================*/
@@ -208,5 +208,5 @@ pthread_t device_io_data_thread_create(unsigned int *data_thread_active)
     	device_io_data_tid = (pthread_t)NULL;
     }
 
-    return device_io_data_tid;
+    return (device_io_data_tid);
 }

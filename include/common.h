@@ -31,11 +31,11 @@
 #define SUCCESS 0
 #define FAILURE -1
 
-#define MAX_KBD_INPUT_STR_LEN 32
+#define MAX_KBD_INPUT_STR_LEN 32u
 
-#define SRC_ADDR_LEN 14;
+#define SRC_ADDR_LEN 14u;
 
-#define MAX_POWERMON_NODES 48
+#define MAX_POWERMON_NODES 48u
 
 #define POWERMON_LOG_DIR "/home/PowerMon/log/"
 #define POWERMON_COREDUMP_DIR "/home/PowerMon/core/"

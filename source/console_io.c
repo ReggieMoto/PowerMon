@@ -37,7 +37,10 @@ pthread_t console_io_tid = (pthread_t)NULL;
 sem_t powermon_login_sem;
 unsigned int login_successful = FALSE;
 
-extern credentials_t * powermon_login(void);
+/*
+ * TODO: Remove
+ * extern credentials_t * powermon_login(void);
+ */
 
 #define KEYPRESS_LF  0x0au
 #define KEYPRESS_BS  0x08u
@@ -107,7 +110,7 @@ static msg_q_status_e send_msg(char *message, pwr_mon_msg_id_e msg_id)
 	else
 		POWERMON_LOGGER(CONSOLE_IO, DEBUG, "Message sent to user io client.\n",0);
 
-	return status;
+	return (status);
 }
 
 /* =================================
@@ -164,7 +167,7 @@ char * console_read_kbd(void)
 
 	POWERMON_LOGGER(CONSOLE_IO, DEBUG, "string: \"%s\"; length: %d\n", strBuffer, strlen(strBuffer));
 
-	return strBuffer;
+	return (strBuffer);
 }
 
 /* =================================
@@ -198,7 +201,7 @@ void* console_io_thread(void *arg)
 	POWERMON_LOGGER(CONSOLE_IO, THREAD, "Exiting %s.\n", __FUNCTION__);
 	pthread_exit((void *)NULL);
 
-	return (void *)NULL;
+	return ((void *)NULL);
 }
 
 /* =================================
@@ -217,5 +220,5 @@ pthread_t console_io_thread_create(unsigned int *console_io_thread_active)
 		POWERMON_LOGGER(USER_IO, FATAL, "Unable to create console_io_thread :[%s]\n", strerror(err));
 	}
 
-	return console_io_tid;
+	return (console_io_tid);
 }

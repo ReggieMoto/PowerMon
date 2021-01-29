@@ -104,7 +104,7 @@ char * msg_q_get_client_name(msg_q_client_e client)
 		break;
 	}
 
-	return client_name;
+	return (client_name);
 }
 
 /* =================================
@@ -141,7 +141,7 @@ msg_q_status_e msg_q_open(const msg_q_client_e client)
 		status = msg_q_status_inoperable;
 	}
 
-	return status;
+	return (status);
 }
 
 /* =================================
@@ -167,7 +167,7 @@ msg_q_status_e msg_q_close(const msg_q_client_e client)
 
 	mq_unlink(queues[client].client_name);
 
-	return status;
+	return (status);
 }
 
 /* =================================
@@ -192,7 +192,7 @@ msg_q_status_e msg_q_send(const msg_q_client_e dst, const char *msg, const unsig
 		POWERMON_LOGGER(MSGQ, WARN, "Bad input parameters: msg: 0x%p, msgLen: %d\n", msg, msgLen);
 	}
 
-	return status;
+	return (status);
 }
 
 /* =================================
@@ -221,5 +221,5 @@ msg_q_status_e msg_q_rcv(const msg_q_client_e dst, char *msg, unsigned int *msgL
 	}
 
 
-	return status;
+	return (status);
 }

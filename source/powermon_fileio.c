@@ -20,20 +20,20 @@
 
 int readLogFile(void)
 {
-	return 0;
+	return (0);
 }
 
 int writeLogFile(void)
 {
-	return 0;
+	return (0);
 }
 
 int readLoginAccounts(void)
 {
-	return 0;
+	return (0);
 }
 
 int writeLoginAccounts(void)
 {
-	return 0;
+	return (0);
 }

@@ -103,8 +103,11 @@ static const char *padStrings[] = {
 #endif
 
 #define CALC_INTERVAL 60
+#define BYTE_MASK 0x0ffu
 
-void consoleCenterOutputLine(char *destBuf, char *srcBuf, int *prePadCount, int *postPadCount)
+static void consoleCenterOutputLine(char *destBuf, char *srcBuf, uint32_t *prePadCount, uint32_t *postPadCount);
+
+static void consoleCenterOutputLine(char *destBuf, char *srcBuf, uint32_t *prePadCount, uint32_t *postPadCount)
 {
 	assert(destBuf && srcBuf && prePadCount && postPadCount);
 	*postPadCount = *prePadCount/2;
@@ -125,7 +128,8 @@ void consoleCenterOutputLine(char *destBuf, char *srcBuf, int *prePadCount, int 
 /* ========================================*/
 void consoleReportActiveNodes(void)
 {
-	int prePadCount, postPadCount;
+	uint32_t prePadCount;
+	uint32_t postPadCount;
 
 	static char consoleOut[CONSOLE_MAX_BUF_LEN];
 	static char workingBuf[CONSOLE_WORKING_LEN];
@@ -152,10 +156,10 @@ void consoleReportActiveNodes(void)
 			char *ipAddr = (char *)&activeNode->nodeIp;
 			static char ipFmt[] = "%u.%u.%u.%u";
 			sprintf(workingBuf, ipFmt,
-					*(ipAddr)&0x0ff,
-					*(ipAddr+1)&0x0ff,
-					*(ipAddr+2)&0x0ff,
-					*(ipAddr+3)&0x0ff);
+					*(ipAddr)&BYTE_MASK,
+					*(ipAddr+1)&BYTE_MASK,
+					*(ipAddr+2)&BYTE_MASK,
+					*(ipAddr+3)&BYTE_MASK);
 			prePadCount = CONSOLE_MAX_IP_ADDR_LEN-strlen(workingBuf);
 			consoleCenterOutputLine(consoleOut, workingBuf, &prePadCount, &postPadCount);
 
@@ -246,8 +250,10 @@ void consoleReportSystemStatus(void)
 /* ========================================*/
 void activeNodeCheck(Packet *packet)
 {
-	/* Look whether we've seen this node before. */
-	/* If not, add it to the active node array. */
+	/*
+	 * Look whether we've seen this node before.
+	 * If not, add it to the active node array.
+	 */
 	bool nodeFound = FALSE;
 
 	if (activeNodes.nodeCount)
@@ -352,7 +358,7 @@ ActiveNode * findActiveNode(Packet *packet)
 	else
 		activeNode = (ActiveNode *)NULL;
 
-	return activeNode;
+	return (activeNode);
 }
 
 /* ========================================*/
@@ -727,7 +733,7 @@ void doSystemPowerCalc(void)
 /* ========================================*/
 bool doPowerCalcAnalysis(void)
 {
-	POWERMON_LOGGER(CALC, INFO, "Performing power consumption analysis from node data.\n",0);
+	POWERMON_LOGGER(CALC, TRACE, "Performing power consumption analysis from node data.\n",0);
 
 	if (sysStatus.status == systemStatus_Learning)
 	{
@@ -756,7 +762,7 @@ bool doPowerCalcAnalysis(void)
 /* ========================================*/
 void doPowerCalc(void)
 {
-	POWERMON_LOGGER(CALC, DEBUG, "Performing power calculations from node data.\n",0);
+	POWERMON_LOGGER(CALC, TRACE, "Performing power calculations from node data.\n",0);
 
 	if (activeNodes.nodeCount)
 	{
@@ -797,7 +803,7 @@ void activeNodeHealthCheck(void)
 	{
 		activeNodes.activeNode[i].nodeQuietCount+=1;
 
-		POWERMON_LOGGER(CALC, DEBUG, "Node %015llu-%04d: Quiet count: %d\n",
+		POWERMON_LOGGER(CALC, TRACE, "Node %015llu-%04d: Quiet count: %d\n",
 				activeNodes.activeNode[i].serialNumber.mfgId,
 				activeNodes.activeNode[i].serialNumber.nodeId,
 				activeNodes.activeNode[i].nodeQuietCount);
@@ -876,7 +882,7 @@ void* powermon_calc_thread_proc(void* arg)
 
 	pthread_exit((void *)NULL);
 
-	return (void *)NULL;
+	return ((void *)NULL);
 }
 
 /* ========================================*/
@@ -900,5 +906,5 @@ pthread_t powermon_calc_thread_create(unsigned int *calc_thread_active)
 		powermon_calc_tid = 0;
 	}
 
-	return powermon_calc_tid;
+	return (powermon_calc_tid);
 }

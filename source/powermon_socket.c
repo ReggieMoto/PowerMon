@@ -60,7 +60,7 @@ int createSocket(void)
 		rc = SUCCESS;
 	}
 
-	return rc;
+	return (rc);
 }
 
 /* ========================================*/
@@ -70,7 +70,8 @@ int createSocket(void)
 /* ========================================*/
 int connectSocket(void)
 {
-	int sockError, rc;
+	int sockError;
+	int rc;
 
 	memset(&svcServer, 0,sizeof(SOCKADDRIN));
 	svcServer.sin_family = AF_INET;
@@ -92,7 +93,7 @@ int connectSocket(void)
 		setWifiSocketIsNotActive();
 	}
 
-	return rc;
+	return (rc);
 }
 
 /* ========================================*/
@@ -102,9 +103,10 @@ int connectSocket(void)
 /* ========================================*/
 int svcSocketReceive(unsigned int *nodeIp, char *buffer, int bufferLen)
 {
-	int msgLen, sockError;
+	int msgLen;
+	int sockError;
 	SOCKADDR sockAddr;
-	unsigned int srcAddrLen = SRC_ADDR_LEN;
+	uint32_t srcAddrLen = SRC_ADDR_LEN;
 
 	if (wifiSocketIsActive())
 	{
@@ -131,7 +133,7 @@ int svcSocketReceive(unsigned int *nodeIp, char *buffer, int bufferLen)
 	else
 		msgLen = FAILURE;
 
-	return msgLen;
+	return (msgLen);
 }
 
 /* ========================================*/

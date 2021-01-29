@@ -90,7 +90,7 @@ int initAvahiPollApi(void)
     	rc = -1;
 	}
 
-	return rc;
+	return (rc);
 }
 
 /* =================================
@@ -252,7 +252,7 @@ int registerPowerMonSvc(void)
     	rc = -1;
     }
 
-    return rc;
+    return (rc);
 }
 
 static unsigned int avahi_thread_active = TRUE;
@@ -314,7 +314,7 @@ void* avahi_svc_thread(void *arg)
 	release_avahi_svc_resources();
 	pthread_exit((void *)NULL);
 
-	return (void *)NULL;
+	return ((void *)NULL);
 }
 
 /* =================================
@@ -322,7 +322,7 @@ void* avahi_svc_thread(void *arg)
  */
 pthread_t get_avahi_svc_tid(void)
 {
-	return avahi_svc_tid;
+	return (avahi_svc_tid);
 }
 
 /* =================================

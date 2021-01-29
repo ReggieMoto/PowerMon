@@ -36,8 +36,11 @@
 extern pthread_t console_io_thread_create(unsigned int *console_io_thread_active);
 extern void user_io_fsm_process_string(pwrmon_msg_t *msg);
 
+/*
+ * TODO: Remove
 extern sem_t powermon_login_sem;
 extern unsigned int login_successful;
+*/
 
 static pthread_t user_io_tid = (pthread_t)NULL;
 
@@ -71,7 +74,7 @@ static msg_q_status_e send_msg(char *buffer, int buf_len, pwr_mon_msg_id_e id, m
 	else
 		POWERMON_LOGGER(USER_IO, DEBUG, "Message sent to %s client.\n", msg_dst);
 
-	return status;
+	return (status);
 }
 
 void user_io_send_exit_msg(void)
@@ -233,7 +236,7 @@ static unsigned int process_received_msg(pwrmon_msg_t *msg, const char msgLen)
 		break;
 	}
 
-	return thread_active;
+	return (thread_active);
 }
 
 #if 0
@@ -309,7 +312,7 @@ void* user_io_thread(void *arg)
 
 	pthread_exit((void *)NULL);
 
-	return (void *)NULL;
+	return ((void *)NULL);
 }
 
 /* =================================
@@ -317,7 +320,7 @@ void* user_io_thread(void *arg)
  */
 pthread_t get_user_io_tid(void)
 {
-	return user_io_tid;
+	return (user_io_tid);
 }
 
 /* =================================

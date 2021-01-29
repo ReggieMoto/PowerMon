@@ -76,7 +76,7 @@ static msg_q_status_e send_msg(pwrmon_msg_t *msg, msg_q_client_e client)
 	else
 		POWERMON_LOGGER(DSTORE, DEBUG, "Message sent to %s client.\n", msg_q_get_client_name(client));
 
-	return status;
+	return (status);
 }
 
 /* =================================
@@ -87,6 +87,9 @@ static unsigned int validate_login_credentials(const char *username, const unsig
 	POWERMON_LOGGER(DSTORE, TRACE, "Function: validate_login_credentials\n", 0);
 
 	unsigned int login_valid = FALSE;
+
+	POWERMON_LOGGER(DSTORE, DEBUG, "SHA3_KECCAK_SPONGE_WORDS: %lu\n", SHA3_KECCAK_SPONGE_WORDS);
+	POWERMON_LOGGER(DSTORE, DEBUG, "sizeof(hash[SHA3_KECCAK_SPONGE_WORDS*8]): %lu\n", SHA3_KECCAK_SPONGE_WORDS*8);
 
 	for (int i=0; i<MAX_LOGIN_ACCOUNTS; i++)
 	{
@@ -118,7 +121,7 @@ static unsigned int validate_login_credentials(const char *username, const unsig
 	refresh();
 #endif
 
-	return login_valid;
+	return (login_valid);
 }
 
 /* =================================
@@ -139,12 +142,12 @@ static unsigned int process_login_credentials(void)
     sha3_Init256(&ctxt);
     sha3_Update(&ctxt, password, strlen(password));
     hash = (uint8_t *)sha3_Finalize(&ctxt);
-    /* 'hash' points to a buffer inside 'ctxt' */
-    /* with the value of SHA3-256 */
-
+    /*
+     * 'hash' points to a buffer inside 'ctxt' with the value of SHA3-256
+     */
     login_valid = validate_login_credentials(username, hash);
 
-	return login_valid;
+	return (login_valid);
 }
 
 /* =================================
@@ -194,7 +197,7 @@ static unsigned int process_received_msg(pwrmon_msg_t *msg, const char msgLen)
 		break;
 	}
 
-	return thread_active;
+	return (thread_active);
 }
 
 void resetDefaultAccount(void)
@@ -261,7 +264,7 @@ void* data_store_thread(void *arg)
 	POWERMON_LOGGER(DSTORE, THREAD, "Exiting data_store thread.\n",0);
 	pthread_exit((void *)NULL);
 
-	return (void *)NULL;
+	return ((void *)NULL);
 }
 
 /* =================================
@@ -269,7 +272,7 @@ void* data_store_thread(void *arg)
  */
 pthread_t get_data_store_tid(void)
 {
-	return data_store_tid;
+	return (data_store_tid);
 }
 
 /* =================================

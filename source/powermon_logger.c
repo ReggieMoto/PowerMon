@@ -158,7 +158,7 @@ powermon_log_level_e get_logger_level(void)
 	pthread_mutex_lock(&logger_mutex);
 	level = global_log_level;
 	pthread_mutex_unlock(&logger_mutex);
-	return level;
+	return (level);
 }
 
 /* =================================
@@ -180,7 +180,7 @@ powermon_log_thread_e get_logger_thread(void)
 	pthread_mutex_lock(&logger_mutex);
 	tid = global_thread_logging;
 	pthread_mutex_unlock(&logger_mutex);
-	return tid;
+	return (tid);
 }
 
 /* =================================
@@ -215,7 +215,7 @@ char * get_logger_level_str(powermon_log_level_e log_level)
 		break;
 	}
 
-	return level_str;
+	return (level_str);
 }
 
 /* =================================
@@ -262,7 +262,7 @@ char * get_logger_thread_str(powermon_log_thread_e thread_id)
 		break;
 	}
 
-	return thread_str;
+	return (thread_str);
 }
 
 /* =================================
@@ -337,7 +337,7 @@ int powermon_logger_init(void)
 		refresh();
 	}
 
-	return status;
+	return (status);
 }
 
 void powermon_logger_shutdown(void)

@@ -54,7 +54,7 @@ static unsigned int process_received_msg(const pwrmon_msg_t *msg, const char msg
 		break;
 	}
 
-	return thread_active;
+	return (thread_active);
 }
 
 /* =================================
@@ -121,7 +121,7 @@ void* device_io_thread(void *arg)
 
 	pthread_exit((void *)NULL);
 
-	return (void *)NULL;
+	return ((void *)NULL);
 }
 
 /* =================================
@@ -129,7 +129,7 @@ void* device_io_thread(void *arg)
  */
 pthread_t get_device_io_tid(void)
 {
-	return device_io_tid;
+	return (device_io_tid);
 }
 
 /* =================================

@@ -60,7 +60,7 @@ static msg_q_status_e send_msg(pwrmon_msg_t *msg, msg_q_client_e client)
 	else
 		POWERMON_LOGGER(PWRMON, DEBUG, "Message sent to %s client.\n", msg_q_get_client_name(client));
 
-	return status;
+	return (status);
 }
 
 /* ========================================*/
@@ -122,7 +122,7 @@ static unsigned int process_received_msg(pwrmon_msg_t *msg, const char msgLen)
 		break;
 	}
 
-	return thread_active;
+	return (thread_active);
 }
 
 /* ========================================*/
@@ -188,7 +188,7 @@ void* powermon_thread(void *arg)
 
 	pthread_exit((void *)NULL);
 
-	return (void *)NULL;
+	return ((void *)NULL);
 }
 
 /* =================================
@@ -196,7 +196,7 @@ void* powermon_thread(void *arg)
  */
 pthread_t get_powermon_tid(void)
 {
-	return powermon_tid;
+	return (powermon_tid);
 }
 
 /* ========================================*/

@@ -1,6 +1,6 @@
 /* ============================================================== */
 /*
- * credentials.h
+ * credentials.c
  *
  * Copyright (c) 2017 David Hammond
  * All Rights Reserved.
