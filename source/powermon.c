@@ -52,7 +52,7 @@ static msg_q_status_e send_msg(pwrmon_msg_t *msg, msg_q_client_e client)
 	msg->src = msg_q_client_powermon;
 	msg->version = PWR_MON_MSG_VERSION;
 
-	POWERMON_LOGGER(PWRMON, DEBUG, "Sending msg (len: %d) to client %d.\n", msgLen, client);
+	POWERMON_LOGGER(PWRMON, DEBUG, "Sending msg (len: %d) to client %s.\n", msgLen, msg_q_get_client_name(client));
 	status = msg_q_send(client, (char *)msg, msgLen);
 
 	if (status != msg_q_status_success)
@@ -103,8 +103,7 @@ static unsigned int process_received_msg(pwrmon_msg_t *msg, const char msgLen)
 		for (msg_q_client_e client = msg_q_client_first; client <= msg_q_client_last; client++)
 		{
 			if ((client != msg_q_client_powermon) &&
-				(client != msg_q_client_console_io)&&
-				(client != msg_q_client_xconsole_io))
+				(client != msg_q_client_console_io))
 			{
 				status = send_msg(msg, client);
 				if (status != msg_q_status_success)
@@ -112,6 +111,7 @@ static unsigned int process_received_msg(pwrmon_msg_t *msg, const char msgLen)
 			}
 		}
 
+		POWERMON_LOGGER(PWRMON, DEBUG, "Signal the AVAHI service thread to terminate.\n", msg_src);
 		set_avahi_thread_inactive();
 		thread_active = FALSE;
 		break;

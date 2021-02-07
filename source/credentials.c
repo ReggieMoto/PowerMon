@@ -48,13 +48,13 @@ void set_passwd_valid(void)
 
 void set_credentials_valid(void)
 {
-	POWERMON_LOGGER(DSTORE, TRACE, "Set credentials valid\n", 0);
+	POWERMON_LOGGER(DSTORE, TRACE, "Setting credentials valid\n", 0);
 	credentials.valid = pwr_mon_credentials_valid;
 }
 
 void set_credentials_invalid(void)
 {
-	POWERMON_LOGGER(DSTORE, TRACE, "Set credentials invalid\n", 0);
+	POWERMON_LOGGER(DSTORE, TRACE, "Setting credentials invalid\n", 0);
 	credentials.valid = pwr_mon_credentials_invalid;
 }
 

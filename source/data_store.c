@@ -170,12 +170,12 @@ static unsigned int process_received_msg(pwrmon_msg_t *msg, const char msgLen)
 
 		if (login_valid)
 		{
-			POWERMON_LOGGER(DSTORE, TRACE, "Set credentials valid\n", 0);
+			POWERMON_LOGGER(DSTORE, TRACE, "Call to set credentials valid\n", 0);
 			set_credentials_valid();
 		}
 		else
 		{
-			POWERMON_LOGGER(DSTORE, TRACE, "Set credentials invalid\n", 0);
+			POWERMON_LOGGER(DSTORE, TRACE, "Call to set credentials invalid\n", 0);
 			set_credentials_invalid();
 		}
 

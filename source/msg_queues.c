@@ -40,11 +40,6 @@ static msg_q_t queues[msg_q_client_count] = {
 		.msg_q = -1
 	},
 	{
-		.client = msg_q_client_xconsole_io,
-		.client_name = "/xconsole_io",
-		.msg_q = -1
-	},
-	{
 		.client = msg_q_client_device_io,
 		.client_name = "/device_io",
 		.msg_q = -1
@@ -90,9 +85,6 @@ char * msg_q_get_client_name(msg_q_client_e client)
 	case msg_q_client_console_io:
 		client_name = "console io";
 		break;
-	case msg_q_client_xconsole_io:
-		client_name = "xconsole io";
-		break;
 	case msg_q_client_device_io:
 		client_name = "device io";
 		break;
@@ -100,7 +92,7 @@ char * msg_q_get_client_name(msg_q_client_e client)
 		client_name = "data store";
 		break;
 	default:
-		POWERMON_LOGGER(MSGQ, WARN, "No client; no name.\n",0);
+		POWERMON_LOGGER(MSGQ, WARN, "No client: %d; no name.\n",client);
 		break;
 	}
 

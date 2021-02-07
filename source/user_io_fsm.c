@@ -115,6 +115,7 @@ void user_io_fsm_process_string(pwrmon_msg_t *msg)
 		else
 		{
 			POWERMON_LOGGER(USER_IO, WARN, "Login state out of sync.\n", 0);
+			current_context->context();
 		}
 		break;
 	default:

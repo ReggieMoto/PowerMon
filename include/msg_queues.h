@@ -32,7 +32,6 @@ typedef enum
 	msg_q_client_powermon = msg_q_client_first,
 	msg_q_client_user_io,
 	msg_q_client_console_io,
-	msg_q_client_xconsole_io,
 	msg_q_client_device_io,
 	msg_q_client_data_store,
 	msg_q_client_last = msg_q_client_data_store,

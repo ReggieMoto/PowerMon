@@ -127,7 +127,8 @@ static int logger_log_entry(char *log_entry)
 		strncat(log_str, log_entry, remaining-1);
 
 		status = fwrite(log_str, strlen(log_str), 1, logfd);
-		fdatasync(fileno(logfd));
+		//fdatasync(fileno(logfd));
+		fsync(fileno(logfd));
 	}
 
 	if (status == 0)

@@ -56,7 +56,7 @@ static AvahiSimplePoll *simplePollApi = (AvahiSimplePoll *)NULL;
 static AvahiPoll *pollApi = (AvahiPoll *)NULL;
 static AvahiEntryGroup *group = (AvahiEntryGroup *)NULL;
 static char svcName[] = "PowerMon";
-static char svcType[] = "powermon";
+static char svcType[] = "_powermon._udp";
 
 static pthread_mutex_t avahi_svc_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_t avahi_svc_tid = (pthread_t)NULL;
@@ -68,6 +68,8 @@ static pthread_t avahi_svc_tid = (pthread_t)NULL;
 int initAvahiPollApi(void)
 {
 	int rc;
+
+	POWERMON_LOGGER(AVAHI, TRACE, "initAvahiPollApi\n",0);
 
 	simplePollApi = avahi_simple_poll_new();
 
@@ -82,6 +84,7 @@ int initAvahiPollApi(void)
 	    	rc = -1;
 		}
 		else
+			POWERMON_LOGGER(AVAHI, DEBUG, "Successfully got the Avahi poll API.\n",0);
 			rc = 0;
 	}
 	else
@@ -105,7 +108,7 @@ static void avahiaEntryGroupCallback(AvahiEntryGroup *avahiGroup, AvahiEntryGrou
     switch (state) {
         case AVAHI_ENTRY_GROUP_ESTABLISHED :
             /* The entry group has been established successfully */
-        	POWERMON_LOGGER(AVAHI, INFO, "Service '%s' successfully established.", svcName);
+        	POWERMON_LOGGER(AVAHI, INFO, "Service '%s' successfully established.\n", svcName);
             break;
         case AVAHI_ENTRY_GROUP_COLLISION :
             /* char *n; */
@@ -113,12 +116,12 @@ static void avahiaEntryGroupCallback(AvahiEntryGroup *avahiGroup, AvahiEntryGrou
              * happened. Let's pick a new name */
             /* n = avahi_alternative_service_name(svcName); */
 
-        	POWERMON_LOGGER(AVAHI, WARN, "Avahi service name collision, renaming service to '%s'", svcName);
+        	POWERMON_LOGGER(AVAHI, WARN, "Avahi service name collision, renaming service to '%s'\n", svcName);
             /* And recreate the services */
             /* create_services(avahi_entry_group_get_client(g)); */
             break;
         case AVAHI_ENTRY_GROUP_FAILURE :
-        	POWERMON_LOGGER(AVAHI, FATAL, "Avahi entry group failure",0);
+        	POWERMON_LOGGER(AVAHI, FATAL, "Avahi entry group failure\n",0);
             /* Some kind of failure happened while we were registering our services */
             avahi_simple_poll_quit(simplePollApi);
             break;
@@ -135,15 +138,20 @@ static void avahiaEntryGroupCallback(AvahiEntryGroup *avahiGroup, AvahiEntryGrou
 
 void createAvahiServices(AvahiClient *avahiClient)
 {
+	POWERMON_LOGGER(AVAHI, TRACE, "createAvahiServices\n", 0);
+
 	if (avahiClient)
 	{
-		POWERMON_LOGGER(AVAHI, INFO, "Create Avahi PowerMon Service.\n", 0);
+		int retval;
+
+		POWERMON_LOGGER(AVAHI, DEBUG, "Request a new Avahi entry group.\n", 0);
 
 		/* If this is the first time we're called, let's create a new entry group if necessary */
 		group = avahi_entry_group_new(avahiClient, avahiaEntryGroupCallback, NULL);
 
-		if (group)
-			avahi_entry_group_add_service(
+		if (group) {
+			POWERMON_LOGGER(AVAHI, DEBUG, "Add the new Avahi entry group.\n", 0);
+			retval = avahi_entry_group_add_service(
 					group,
 					AVAHI_IF_UNSPEC,
 					AVAHI_PROTO_INET,
@@ -154,8 +162,23 @@ void createAvahiServices(AvahiClient *avahiClient)
 					NULL,
 					52955,
 					NULL);
-		else
-			POWERMON_LOGGER(AVAHI, FATAL, "Avahi entry group creation failed: %s", avahi_strerror(avahi_client_errno(avahiClient)));
+
+			if (retval < 0) {
+				POWERMON_LOGGER(AVAHI, FATAL, "Failed to add %s service: %s\n", svcType, avahi_strerror(retval));
+			} else {
+
+				retval = avahi_entry_group_commit(group);
+
+				if (retval < 0) {
+					POWERMON_LOGGER(AVAHI, FATAL, "Failed to commit entry group: %s\n", avahi_strerror(retval));
+				} else {
+					POWERMON_LOGGER(AVAHI, INFO, "Successfully Registered the new Avahi services\n", 0);
+				}
+			}
+
+		} else {
+			POWERMON_LOGGER(AVAHI, FATAL, "Avahi entry group creation failed: %s\n", avahi_strerror(avahi_client_errno(avahiClient)));
+		}
 	}
 	else
 	{
@@ -226,11 +249,14 @@ int registerPowerMonSvc(void)
 	int userData;
 	int avahiErr, rc;
 
+	POWERMON_LOGGER(AVAHI, TRACE, "registerPowerMonSvc\n",0);
+
 	/* Allocate main loop object */
 	rc = initAvahiPollApi();
 
     if ((rc == 0) && pollApi)
     {
+		POWERMON_LOGGER(AVAHI, DEBUG, "Requesting a new Avahi client.\n",0);
         /* Allocate a new client */
     	avahiClient = avahi_client_new( pollApi, flags, avahiClientCallback, &userData, &avahiErr);
 
@@ -301,17 +327,16 @@ void* avahi_svc_thread(void *arg)
 		sem_wait(sem);
 		POWERMON_LOGGER(AVAHI, THREAD, "avahi_svc_thread is alive.\n",0);
 
-		do {
-
-			/* Run the main loop */
-			avahi_simple_poll_loop(simplePollApi);
-
-		} while (avahi_thread_active == TRUE);
+		/* Run the main loop */
+		avahi_simple_poll_loop(simplePollApi);
 
 		POWERMON_LOGGER(AVAHI, THREAD, "Exiting avahi_svc_thread.\n",0);
 	}
 
-	release_avahi_svc_resources();
+	if (avahi_thread_active == TRUE) {
+		set_avahi_thread_inactive();
+	}
+
 	pthread_exit((void *)NULL);
 
 	return ((void *)NULL);
