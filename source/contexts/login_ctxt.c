@@ -91,22 +91,41 @@ static void login_invalid(void)
 
 static void login_screen(void)
 {
+	printw("\t _______\n");
+	printw("\t/       \\\n");
+	printw("\t$$$$$$$  | ______   __   __   __   ______    ______\n");
+	printw("\t$$ |__$$ |/      \\ /  | /  | /  | /      \\  /      \\\n");
+	printw("\t$$    $$//$$$$$$  |$$ | $$ | $$ |/$$$$$$  |/$$$$$$  |\n");
+	printw("\t$$$$$$$/ $$ |  $$ |$$ | $$ | $$ |$$    $$ |$$ |  $$/\n");
+	printw("\t$$ |     $$ \\__$$ |$$ \\_$$ \\_$$ |$$$$$$$$/ $$ |\n");
+	printw("\t$$ |     $$    $$/ $$   $$   $$/ $$       |$$ |\n");
+	printw("\t$$/       $$$$$$/   $$$$$/$$$$/   $$$$$$$/ $$/\n");
+	printw("\n\n\n");
+	printw("\t       __       __\n");
+	printw("\t      /  \\     /  |\n");
+	printw("\t      $$  \\   /$$ |  ______   _______\n");
+	printw("\t      $$$  \\ /$$$ | /      \\ /       \\\n");
+	printw("\t      $$$$  /$$$$ |/$$$$$$  |$$$$$$$  |\n");
+	printw("\t      $$ $$ $$/$$ |$$ |  $$ |$$ |  $$ |\n");
+	printw("\t      $$ |$$$/ $$ |$$ \\__$$ |$$ |  $$ |\n");
+	printw("\t      $$ | $/  $$ |$$    $$/ $$ |  $$ |\n");
+	printw("\t      $$/      $$/  $$$$$$/  $$/   $$/\n");
 	printw("\n\n");
-	printw("\t ======================\n");
-	printw("\t|    PowerMon Login    |\n");
-	printw("\t ======================\n");
+	printw("\t\t ======================\n");
+	printw("\t\t|    PowerMon Login    |\n");
+	printw("\t\t ======================\n");
 	refresh();
 }
 
 static void print_login_username(void)
 {
-	printw("\tusername: ");
+	printw("\t\tusername: ");
 	refresh();
 }
 
 static void print_login_password(void)
 {
-	printw("\tpassword: ");
+	printw("\t\tpassword: ");
 	refresh();
 }
 

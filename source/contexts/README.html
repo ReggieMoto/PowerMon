@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>README</title>
+  </head>
+  <body>
+    <h3><span style="font-family: Arial;"></span><span style="font-family: Arial;">PowerMon
+        Context Readme</span></h3>
+    <h3><span style="font-family: Arial;"></span></h3>
+    <span style="font-family: Arial;">PowerMon's console screen management is
+      done using a quasi-state machine in which contexts are states, key presses
+      are inputs, and...well, actions are actions. The files that comprise the
+      PowerMon screen management system are:<br>
+    </span>
+    <ul>
+      <li><span style="font-family: Arial;">user_io.c/h</span></li>
+      <li><span style="font-family: Arial;">user_io_fsm.c/h</span></li>
+      <li><span style="font-family: Arial;">console_io.c/h</span></li>
+      <li><span style="font-family: Arial;">the various xxx_ctx.c/h files</span></li>
+    </ul>
+    <p><span style="font-family: Arial;"><span style="font-family: Arial;">States
+          and inputs are defined in user_io_fsm as are a registration function
+          for configuring a table with the inputs and actions a context
+          supports, a default non-action function the table is initialized with
+          at startup, and the startup initialization function. Since console
+          management occurs within the context of a single thread no mutex is
+          required to manage access to the resources.<br>
+        </span></span></p>
+    <p><span style="font-family: Arial;"><span style="font-family: Arial;"></span>The
+        call to initialize the user_io_fsm component is made at user_io thread
+        initialization in user_io just before entering the thread loop.</span></p>
+    <span style="font-family: Arial;">There are presently 6 user_io_fsm
+      states/contexts: login (the default startup context), config (the 'top'
+      level context), user, add_user, edit_user, and report. There are plans to
+      implement others: one for WiFi network selection, one for device
+      discovery, and one for managing the logging.<br>
+      <br>
+      Key presses are received in the console_io thread. Once a carriage return
+      is received, the resulting string -- either a single keypress or a string
+      of characters -- is sent to the user_io thread. The user_io message
+      handler calls the appropriate handler for either a single keypress or for
+      a string. For single key presses, the user_io_fsm is called with the
+      single keypress as an input to the state machine. A lookup is done for the
+      current state and input, and the resulting action is called, either a
+      specific handler for the keypress or the default non-action handler.<br>
+      <br>
+      What's displayed on the screen is managed by the context.<br>
+    </span><br>
+    <span style="font-family: Arial;">
+    </span>
+  </body>
+</html>

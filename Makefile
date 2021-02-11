@@ -22,7 +22,6 @@ SRCS += source/sha3.c
 SRCS += source/user_io.c
 SRCS += source/user_io_fsm.c
 SRCS += source/credentials.c
-SRCS += source/xconsole_io.c
 SRCS += source/contexts/login_ctxt.c
 SRCS += source/contexts/config_ctxt.c
 SRCS += source/contexts/report_ctxt.c
@@ -32,7 +31,7 @@ SRCS += source/contexts/edit_user_ctxt.c
 
 OBJS = $(SRCS:.c=.o)
 
-LIBS = -pthread -L/usr/lib/x86_64-linux-gnu -lX11 -lrt -lavahi-core -lavahi-client -lavahi-common -lncurses
+LIBS = -pthread -L/usr/lib/x86_64-linux-gnu -lrt -lavahi-core -lavahi-client -lavahi-common -lncurses
 LFLAGS = 
 
 MAIN = PowerMon
