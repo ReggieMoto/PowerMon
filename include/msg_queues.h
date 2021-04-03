@@ -32,7 +32,6 @@ typedef enum
 	msg_q_client_powermon = msg_q_client_first,
 	msg_q_client_user_io,
 	msg_q_client_console_io,
-	msg_q_client_xconsole_io,
 	msg_q_client_device_io,
 	msg_q_client_data_store,
 	msg_q_client_last = msg_q_client_data_store,
@@ -50,7 +49,8 @@ typedef enum
 	msg_q_status_failed_to_receive,
 	msg_q_status_input_bad_params,
 	msg_q_status_no_destination,
-	msg_q_status_last = msg_q_status_no_destination
+	msg_q_status_inoperable,
+	msg_q_status_last = msg_q_status_inoperable
 } msg_q_status_e;
 
 typedef struct _msg_q
@@ -60,7 +60,6 @@ typedef struct _msg_q
 	mqd_t msg_q;
 } msg_q_t;
 
-msg_q_status_e msg_q_init(void);
 msg_q_status_e msg_q_open(const msg_q_client_e client);
 msg_q_status_e msg_q_close(const msg_q_client_e client);
 msg_q_status_e msg_q_send(const msg_q_client_e dst, const char *msg, const unsigned int msgLen);

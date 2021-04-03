@@ -54,7 +54,7 @@ static unsigned int process_received_msg(const pwrmon_msg_t *msg, const char msg
 		break;
 	}
 
-	return thread_active;
+	return (thread_active);
 }
 
 /* =================================
@@ -86,7 +86,7 @@ void* device_io_thread(void *arg)
 
 			memset(msg, 0, msgLen);
 
-			POWERMON_LOGGER(DEV_IO, INFO, "Waiting on message queue receive.\n",0);
+			POWERMON_LOGGER(DEV_IO, DEBUG, "Waiting on message queue receive.\n",0);
 			status = msg_q_rcv(msg_q_client_device_io, msg, &msgLen);
 			POWERMON_LOGGER(DEV_IO, DEBUG, "Received message of len %d over msg q.\n", msgLen);
 
@@ -121,7 +121,7 @@ void* device_io_thread(void *arg)
 
 	pthread_exit((void *)NULL);
 
-	return (void *)NULL;
+	return ((void *)NULL);
 }
 
 /* =================================
@@ -129,7 +129,7 @@ void* device_io_thread(void *arg)
  */
 pthread_t get_device_io_tid(void)
 {
-	return device_io_tid;
+	return (device_io_tid);
 }
 
 /* =================================

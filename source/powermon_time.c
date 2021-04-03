@@ -35,7 +35,7 @@ time_t getPwrmonSystemStartTime(void)
 			startTime = 0;
 		}
 	}
-	return startTime;
+	return (startTime);
 }
 
 /* ================================================ */
@@ -71,7 +71,7 @@ double getPwrmonElapsedTime(time_t time1, time_t time0, PwrmonTime *elapsedTime)
 		elapsedTime->secs = elapsed_mins_secs%60;
 	}
 
-	return timeDiff;
+	return (timeDiff);
 }
 
 void getPwrmonElapsedSystemTime(PwrmonTime *elapsedTime)

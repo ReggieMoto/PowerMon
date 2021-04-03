@@ -21,6 +21,7 @@
 #ifndef __POWERMON_SOCKET_H__
 #define __POWERMON_SOCKET_H__
 
+#include <stdbool.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
@@ -37,7 +38,10 @@ typedef struct sockaddr SOCKADDR;
 typedef struct ip_addr {
   union {
     struct {
-      u_char s_b1,s_b2,s_b3,s_b4;
+      u_char s_b1;
+      u_char s_b2;
+      u_char s_b3;
+      u_char s_b4;
     } S_un_b;
     u_long S_addr;
   } S_un;

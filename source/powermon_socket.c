@@ -45,7 +45,7 @@ int createSocket(void)
 {
 	int rc;
 
-	// Create the UDP socket for connecting to server
+	/* Create the UDP socket for connecting to server */
 	srvrSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
 	if (srvrSocket == INVALID_SOCKET)
@@ -56,11 +56,11 @@ int createSocket(void)
 	}
 	else
 	{
-		POWERMON_LOGGER(DEV_IO, DEBUG, "UDP socket %d created.\n",srvrSocket);
+		POWERMON_LOGGER(DEV_IO, INFO, "UDP socket %d created.\n",srvrSocket);
 		rc = SUCCESS;
 	}
 
-	return rc;
+	return (rc);
 }
 
 /* ========================================*/
@@ -70,7 +70,8 @@ int createSocket(void)
 /* ========================================*/
 int connectSocket(void)
 {
-	int sockError, rc;
+	int sockError;
+	int rc;
 
 	memset(&svcServer, 0,sizeof(SOCKADDRIN));
 	svcServer.sin_family = AF_INET;
@@ -92,7 +93,7 @@ int connectSocket(void)
 		setWifiSocketIsNotActive();
 	}
 
-	return rc;
+	return (rc);
 }
 
 /* ========================================*/
@@ -102,9 +103,10 @@ int connectSocket(void)
 /* ========================================*/
 int svcSocketReceive(unsigned int *nodeIp, char *buffer, int bufferLen)
 {
-	int msgLen, sockError;
+	int msgLen;
+	int sockError;
 	SOCKADDR sockAddr;
-	unsigned int srcAddrLen = SRC_ADDR_LEN;
+	uint32_t srcAddrLen = SRC_ADDR_LEN;
 
 	if (wifiSocketIsActive())
 	{
@@ -113,7 +115,7 @@ int svcSocketReceive(unsigned int *nodeIp, char *buffer, int bufferLen)
 		if (msgLen < 0)
 		{
 			sockError = errno;
-			POWERMON_LOGGER(DEV_IO, INFO, "UDP socket returned an error (errno: %d).\n", sockError);
+			POWERMON_LOGGER(DEV_IO, WARN, "UDP socket returned an error (errno: %d).\n", sockError);
 		}
 		else
 		{
@@ -122,8 +124,8 @@ int svcSocketReceive(unsigned int *nodeIp, char *buffer, int bufferLen)
 			IP_ADDR *ipAddr = (IP_ADDR *)&(sinAddr->s_addr);
 			*nodeIp = (unsigned int)(ipAddr->S_un.S_addr);
 
-			POWERMON_LOGGER(DEV_IO, INFO, "UDP socket returned a packet of length %d.\n", msgLen);
-			POWERMON_LOGGER(DEV_IO, INFO, "Packet source: %d.%d.%d.%d.\n",
+			POWERMON_LOGGER(DEV_IO, DEBUG, "UDP socket returned a packet of length %d.\n", msgLen);
+			POWERMON_LOGGER(DEV_IO, DEBUG, "Packet source: %d.%d.%d.%d.\n",
 					ipAddr->S_un.S_un_b.s_b1, ipAddr->S_un.S_un_b.s_b2,
 					ipAddr->S_un.S_un_b.s_b3, ipAddr->S_un.S_un_b.s_b4);
 		}
@@ -131,7 +133,7 @@ int svcSocketReceive(unsigned int *nodeIp, char *buffer, int bufferLen)
 	else
 		msgLen = FAILURE;
 
-	return msgLen;
+	return (msgLen);
 }
 
 /* ========================================*/
@@ -145,7 +147,7 @@ void svcSocketSend(unsigned int nodeIp, char *buffer, int bufferLen)
 
 	if (wifiSocketIsActive())
 	{
-		POWERMON_LOGGER(DEV_IO, INFO, "Request to send a packet.\n", 0);
+		POWERMON_LOGGER(DEV_IO, DEBUG, "Request to send a packet.\n", 0);
 
 		sockAddr.sin_family = AF_INET;
 		sockAddr.sin_port = htons(SVC_PORT);

@@ -27,6 +27,7 @@
 #include <time.h>
 
 #include "powermon_calc.h"
+#include "powermon_curses.h"
 #include "powermon_time.h"
 #include "device_io_data.h"
 #include "powermon_pkt.h"
@@ -46,6 +47,15 @@ static PwrCalcSystemStatus sysStatus;
 
 /* Forward declaration(s) */
 static ActiveNode * findActiveNode(Packet *packet);
+static void powermonCalc(unsigned int array);
+static void activeNodeHealthCheck(void);
+static void updateActiveNodeData(unsigned int array);
+static void initPollCycleDataArray(unsigned int array);
+static void updateCoolingNodeToIdle(ActiveNode *activeNode);
+static void updateIdleNodeToCooling(ActiveNode *activeNode);
+static void removeActiveNode(unsigned int index);
+static ActiveNode * findActiveNode(Packet *packet);
+static void activeNodeCheck(Packet *packet);
 
 
 /* ========================================*/
@@ -101,7 +111,12 @@ static const char *padStrings[] = {
 #define MAX_QUIET_REMOVE (60 * 24 * 3)	/* 60 mins x 24 hrs x 3 days */
 #endif
 
-void consoleCenterOutputLine(char *destBuf, char *srcBuf, int *prePadCount, int *postPadCount)
+#define CALC_INTERVAL 60
+#define BYTE_MASK 0x0ffu
+
+static void consoleCenterOutputLine(char *destBuf, char *srcBuf, uint32_t *prePadCount, uint32_t *postPadCount);
+
+static void consoleCenterOutputLine(char *destBuf, char *srcBuf, uint32_t *prePadCount, uint32_t *postPadCount)
 {
 	assert(destBuf && srcBuf && prePadCount && postPadCount);
 	*postPadCount = *prePadCount/2;
@@ -122,84 +137,85 @@ void consoleCenterOutputLine(char *destBuf, char *srcBuf, int *prePadCount, int 
 /* ========================================*/
 void consoleReportActiveNodes(void)
 {
-	int prePadCount, postPadCount;
-
-	static char consoleOut[CONSOLE_MAX_BUF_LEN];
-	static char workingBuf[CONSOLE_WORKING_LEN];
-
 	for (int i=0; i<activeNodes.nodeCount; i++)
 	{
 		ActiveNode *activeNode = &activeNodes.activeNode[i];
 
-		if (activeNode)
+		uint32_t prePadCount;
+		uint32_t postPadCount;
+
+		char consoleOut[CONSOLE_MAX_BUF_LEN];
+		char workingBuf[CONSOLE_WORKING_LEN];
+
+		prePadCount = 0u;
+		postPadCount = 0u;
+		memset (consoleOut, 0, CONSOLE_MAX_BUF_LEN);
+		const char lineHdrFmt[] = "\t %2d.";
+		sprintf(consoleOut, lineHdrFmt, i+1);
+
+		/* Get the serial number */
+		memset(workingBuf, 0, CONSOLE_WORKING_LEN);
+		const char snFmt[] = "%015lu-%04d";
+		sprintf(workingBuf, snFmt, activeNode->serialNumber.mfgId, activeNode->serialNumber.nodeId);
+		prePadCount = CONSOLE_MAX_SER_NUM_LEN-strlen(workingBuf);
+		consoleCenterOutputLine(consoleOut, workingBuf, &prePadCount, &postPadCount);
+
+		/* Get the IP address */
+		memset(workingBuf, 0, CONSOLE_WORKING_LEN);
+		char *ipAddr = (char *)&activeNode->nodeIp;
+		const char ipFmt[] = "%u.%u.%u.%u";
+		sprintf(workingBuf, ipFmt,
+				*(ipAddr)&BYTE_MASK,
+				*(ipAddr+1)&BYTE_MASK,
+				*(ipAddr+2)&BYTE_MASK,
+				*(ipAddr+3)&BYTE_MASK);
+		prePadCount = CONSOLE_MAX_IP_ADDR_LEN-strlen(workingBuf);
+		consoleCenterOutputLine(consoleOut, workingBuf, &prePadCount, &postPadCount);
+
+		/* Get the active disable setting */
+		memset(workingBuf, 0, CONSOLE_WORKING_LEN);
+		sprintf(workingBuf, "%s", activeNode->activeDisable?"Yes":"No");
+		prePadCount = CONSOLE_MAX_DISABLE_LEN-strlen(workingBuf);
+		consoleCenterOutputLine(consoleOut, workingBuf, &prePadCount, &postPadCount);
+
+		/* Get the cooldown time average */
 		{
-			memset (consoleOut, 0, CONSOLE_MAX_BUF_LEN);
-			static char lineHdrFmt[] = "\t %2d.";
-			sprintf(consoleOut, lineHdrFmt, i+1);
-
-			/* Get the serial number */
+			unsigned int mins = activeNode->runningNodeRateOfChangeCooldownAverage/60;
+			unsigned int secs = activeNode->runningNodeRateOfChangeCooldownAverage-(mins*60);
 			memset(workingBuf, 0, CONSOLE_WORKING_LEN);
-			static char snFmt[] = "%015llu-%04d";
-			sprintf(workingBuf, snFmt, activeNode->serialNumber.mfgId, activeNode->serialNumber.nodeId);
-			prePadCount = CONSOLE_MAX_SER_NUM_LEN-strlen(workingBuf);
+			sprintf(workingBuf, "%02d:%02d", mins, secs);
+			prePadCount = CONSOLE_MAX_AVG_OFF_LEN-strlen(workingBuf);
 			consoleCenterOutputLine(consoleOut, workingBuf, &prePadCount, &postPadCount);
-
-			/* Get the IP address */
-			memset(workingBuf, 0, CONSOLE_WORKING_LEN);
-			char *ipAddr = (char *)&activeNode->nodeIp;
-			static char ipFmt[] = "%u.%u.%u.%u";
-			sprintf(workingBuf, ipFmt,
-					*(ipAddr)&0x0ff,
-					*(ipAddr+1)&0x0ff,
-					*(ipAddr+2)&0x0ff,
-					*(ipAddr+3)&0x0ff);
-			prePadCount = CONSOLE_MAX_IP_ADDR_LEN-strlen(workingBuf);
-			consoleCenterOutputLine(consoleOut, workingBuf, &prePadCount, &postPadCount);
-
-			/* Get the active disable setting */
-			memset(workingBuf, 0, CONSOLE_WORKING_LEN);
-			sprintf(workingBuf, "%s", activeNode->activeDisable?"Yes":"No");
-			prePadCount = CONSOLE_MAX_DISABLE_LEN-strlen(workingBuf);
-			consoleCenterOutputLine(consoleOut, workingBuf, &prePadCount, &postPadCount);
-
-			/* Get the warmup time average */
-			{
-				unsigned int mins = activeNode->runningNodeRateOfChangeWarmupAverage/60;
-				unsigned int secs = activeNode->runningNodeRateOfChangeWarmupAverage-(mins*60);
-				memset(workingBuf, 0, CONSOLE_WORKING_LEN);
-				sprintf(workingBuf, "%02d:%02d", mins, secs);
-				prePadCount = CONSOLE_MAX_AVG_OFF_LEN-strlen(workingBuf);
-				consoleCenterOutputLine(consoleOut, workingBuf, &prePadCount, &postPadCount);
-			}
-
-			/* Get the cooldown time average */
-			{
-				unsigned int mins = activeNode->runningNodeRateOfChangeCooldownAverage/60;
-				unsigned int secs = activeNode->runningNodeRateOfChangeCooldownAverage-(mins*60);
-				memset(workingBuf, 0, CONSOLE_WORKING_LEN);
-				sprintf(workingBuf, "%02d:%02d", mins, secs);
-				prePadCount = CONSOLE_MAX_AVG_OFF_LEN-strlen(workingBuf);
-				consoleCenterOutputLine(consoleOut, workingBuf, &prePadCount, &postPadCount);
-			}
-
-			/* Get the amps average */
-			memset(workingBuf, 0, CONSOLE_WORKING_LEN);
-			sprintf(workingBuf, "%d", activeNode->runningNodeAmpsAverage);
-			prePadCount = CONSOLE_MAX_AVG_AMP_LEN-strlen(workingBuf);
-			consoleCenterOutputLine(consoleOut, workingBuf, &prePadCount, &postPadCount);
-
-			/* Get the quiet node alert indicator */
-			memset(workingBuf, 0, CONSOLE_WORKING_LEN);
-			if (activeNode->nodeQuietCount > MAX_QUIET_ALERT)
-				sprintf(workingBuf, "*");
-			else
-				sprintf(workingBuf, " ");
-			prePadCount = CONSOLE_MAX_HRTBEAT_LEN-strlen(workingBuf);
-			consoleCenterOutputLine(consoleOut, workingBuf, &prePadCount, &postPadCount);
-
-			assert(strlen(consoleOut) < CONSOLE_MAX_BUF_LEN);
-			printf("%s\n",consoleOut);
 		}
+
+		/* Get the warmup time average */
+		{
+			unsigned int mins = activeNode->runningNodeRateOfChangeWarmupAverage/60;
+			unsigned int secs = activeNode->runningNodeRateOfChangeWarmupAverage-(mins*60);
+			memset(workingBuf, 0, CONSOLE_WORKING_LEN);
+			sprintf(workingBuf, "%02d:%02d", mins, secs);
+			prePadCount = CONSOLE_MAX_AVG_OFF_LEN-strlen(workingBuf);
+			consoleCenterOutputLine(consoleOut, workingBuf, &prePadCount, &postPadCount);
+		}
+
+		/* Get the amps average */
+		memset(workingBuf, 0, CONSOLE_WORKING_LEN);
+		sprintf(workingBuf, "%d", activeNode->runningNodeAmpsAverage);
+		prePadCount = CONSOLE_MAX_AVG_AMP_LEN-strlen(workingBuf);
+		consoleCenterOutputLine(consoleOut, workingBuf, &prePadCount, &postPadCount);
+
+		/* Get the quiet node alert indicator */
+		memset(workingBuf, 0, CONSOLE_WORKING_LEN);
+		if (activeNode->nodeQuietCount > MAX_QUIET_ALERT)
+			sprintf(workingBuf, "*");
+		else
+			sprintf(workingBuf, " ");
+		prePadCount = CONSOLE_MAX_HRTBEAT_LEN-strlen(workingBuf);
+		consoleCenterOutputLine(consoleOut, workingBuf, &prePadCount, &postPadCount);
+
+		assert(strlen(consoleOut) < CONSOLE_MAX_BUF_LEN);
+		printw("%s\n",consoleOut);
+		refresh();
 	}
 }
 
@@ -210,28 +226,82 @@ void consoleReportActiveNodes(void)
 /* ========================================*/
 void consoleReportSystemStatus(void)
 {
-	static char currentSysStatus[]  = "    Current System Status";
-	static char numberOfOnNodes[]   = "      Number of  on nodes";
-	static char avgNumOfOnNodes[]   = " Avg. number of  on nodes";
-	static char numberOfOffNodes[]  = "      Number of off nodes";
-	static char sysStatusLearning[] = "Learning";
-	static char sysStatusActive[]   = "Active";
-	static char currentAmpDraw[]    = "         Present Amp draw";
-	static char averageAmpDraw[]    = "         Average Amp draw";
+	const char *currentSysStatus  = "    Current System Status";
+	const char *numberOfOnNodes   = "      Number of  on nodes";
+	const char *avgNumOfOnNodes   = " Avg. number of  on nodes";
+	const char *numberOfOffNodes  = "      Number of off nodes";
+	const char *sysStatusLearning = "Learning";
+	const char *sysStatusActive   = "Active";
+	const char *currentAmpDraw    = "         Current Amp draw";
+	const char *averageAmpDraw    = "         Average Amp draw";
 	char* sysStatusStr;
 
 	if (sysStatus.status == systemStatus_Learning)
-		sysStatusStr = sysStatusLearning;
+		sysStatusStr = (char *)sysStatusLearning;
 	else
-		sysStatusStr = sysStatusActive;
+		sysStatusStr = (char *)sysStatusActive;
 
-	printf("\t\t%s:\t%s\n", currentSysStatus, sysStatusStr);
-	printf("\t\t%s:\t%3d\n", numberOfOnNodes, sysStatus.onNodesCount);
-	printf("\t\t%s:\t%3d\n", avgNumOfOnNodes, sysStatus.runningOnNodesAverage);
-	printf("\t\t%s:\t%3d\n", numberOfOffNodes, sysStatus.offNodesCount);
-	printf("\t\t------------------------------------------\n");
-	printf("\t\t%s:\t%3d\n", currentAmpDraw, sysStatus.currentAmps);
-	printf("\t\t%s:\t%3d\n", averageAmpDraw, sysStatus.runningAmpsAverage);
+	printw("\t\t%s:\t%s\n", currentSysStatus, sysStatusStr);
+	printw("\t\t%s:\t%3d\n", numberOfOnNodes, sysStatus.onNodesCount);
+	printw("\t\t%s:\t%3d\n", avgNumOfOnNodes, sysStatus.runningOnNodesAverage);
+	printw("\t\t%s:\t%3d\n", numberOfOffNodes, sysStatus.offNodesCount);
+	printw("\t\t------------------------------------------\n");
+	printw("\t\t%s:\t%3d\n", currentAmpDraw, sysStatus.currentAmps);
+	printw("\t\t%s:\t%3d\n", averageAmpDraw, sysStatus.runningAmpsAverage);
+	refresh();
+}
+
+/* ========================================*/
+/*
+ *  consoleReportDumpActiveNode
+ */
+/* ========================================*/
+void consoleReportDumpActiveNode(uint32_t node)
+{
+	if ((activeNodes.nodeCount) && (node <= activeNodes.nodeCount)) {
+
+		const char *serial_number  = " Serial Number";
+		const char *ip_address     = "    IP Address";
+		const char *active_disable = "Active Disable";
+		const char *current_temp   = "  Current Temp";
+		const char *current_amps   = "  Current Amps";
+		const char *avg_on         = "   Average  On";
+		const char *avg_off        = "   Average Off";
+		const char *avg_amp        = "   Average Amp";
+		const char *hb_alert       = "      HB Alert";
+
+		ActiveNode *activeNode = &activeNodes.activeNode[node];
+
+		printw("\t\t%s:\t%015lu-%04d\n", serial_number, activeNode->serialNumber.mfgId, activeNode->serialNumber.nodeId);
+		char *ipAddr = (char *)&activeNode->nodeIp;
+		printw("\t\t%s:\t%u.%u.%u.%u\n", ip_address,
+				*(ipAddr)&BYTE_MASK, *(ipAddr+1)&BYTE_MASK, *(ipAddr+2)&BYTE_MASK, *(ipAddr+3)&BYTE_MASK);
+		printw("\t\t%s:\t%s\n", active_disable, activeNode->activeDisable?"Yes":"No");
+		printw("\t\t------------------------------------------\n");
+		printw("\t\t%s:\t%3d\n", current_temp, activeNode->temp);
+		printw("\t\t%s:\t%3d\n", current_amps, activeNode->amps);
+		printw("\t\t------------------------------------------\n");
+		/* Get the cooldown time average */
+		{
+			unsigned int mins = activeNode->runningNodeRateOfChangeCooldownAverage/60;
+			unsigned int secs = activeNode->runningNodeRateOfChangeCooldownAverage-(mins*60);
+			printw("\t\t%s:\t%02d:%02d\n", avg_on, mins, secs);
+		}
+
+		/* Get the warmup time average */
+		{
+			unsigned int mins = activeNode->runningNodeRateOfChangeWarmupAverage/60;
+			unsigned int secs = activeNode->runningNodeRateOfChangeWarmupAverage-(mins*60);
+			printw("\t\t%s:\t%02d:%02d\n", avg_off, mins, secs);
+		}
+
+		printw("\t\t%s:\t%3d\n", avg_amp, activeNode->runningNodeAmpsAverage);
+		printw("\t\t%s:\t%s\n", hb_alert, activeNode->nodeQuietCount > MAX_QUIET_ALERT?"Yes":"No");
+		refresh();
+
+	} else {
+
+	}
 }
 
 /* ========================================*/
@@ -239,10 +309,12 @@ void consoleReportSystemStatus(void)
  *  activeNodeCheck
  */
 /* ========================================*/
-void activeNodeCheck(Packet *packet)
+static void activeNodeCheck(Packet *packet)
 {
-	// Look whether we've seen this node before.
-	// If not, add it to the active node array.
+	/*
+	 * Look whether we've seen this node before.
+	 * If not, add it to the active node array.
+	 */
 	bool nodeFound = FALSE;
 
 	if (activeNodes.nodeCount)
@@ -263,7 +335,7 @@ void activeNodeCheck(Packet *packet)
 
 			if (!nodeFound)
 			{
-				// Add node to the array
+				/* Add node to the array */
 				ActiveNode *activeNode = &activeNodes.activeNode[activeNodes.nodeCount];
 				memset((void *)activeNode, 0, sizeof(ActiveNode));
 
@@ -274,20 +346,20 @@ void activeNodeCheck(Packet *packet)
 
 				activeNodes.nodeCount+=1;
 
-				POWERMON_LOGGER(CALC, DEBUG, "Added node %015llu-%04d to activeNode array.\n",
+				POWERMON_LOGGER(CALC, INFO, "Added node %015llu-%04d to activeNode array.\n",
 						packet->node.serialNumber.mfgId, packet->node.serialNumber.nodeId);
 			}
 		}
 		else
 		{
-			// Array is full
+			/* Array is full */
 			POWERMON_LOGGER(CALC, WARN, "activeNode array is full.\n",0);
 		}
 	}
 	else
 	{
-		// First active node into array
-		// Add node to the array
+		/* First active node into array */
+		/* Add node to the array */
 		ActiveNode *activeNode = &activeNodes.activeNode[activeNodes.nodeCount];
 		memset((void *)activeNode, 0, sizeof(ActiveNode));
 
@@ -298,7 +370,7 @@ void activeNodeCheck(Packet *packet)
 
 		activeNodes.nodeCount+=1;
 
-		POWERMON_LOGGER(CALC, DEBUG, "Added node %015llu-%04d to activeNode array.\n",
+		POWERMON_LOGGER(CALC, INFO, "Added node %015llu-%04d to activeNode array.\n",
 				packet->node.serialNumber.mfgId, packet->node.serialNumber.nodeId);
 	}
 }
@@ -308,7 +380,7 @@ void activeNodeCheck(Packet *packet)
  *  findActiveNode
  */
 /* ========================================*/
-ActiveNode * findActiveNode(Packet *packet)
+static ActiveNode * findActiveNode(Packet *packet)
 {
 	bool nodeFound = FALSE;
 	ActiveNode *activeNode;
@@ -347,7 +419,7 @@ ActiveNode * findActiveNode(Packet *packet)
 	else
 		activeNode = (ActiveNode *)NULL;
 
-	return activeNode;
+	return (activeNode);
 }
 
 /* ========================================*/
@@ -355,11 +427,11 @@ ActiveNode * findActiveNode(Packet *packet)
  *  removeActiveNode
  */
 /* ========================================*/
-void removeActiveNode(unsigned int index)
+static void removeActiveNode(unsigned int index)
 {
 	if (index < activeNodes.nodeCount)
 	{
-		POWERMON_LOGGER(CALC, DEBUG, "Removing node %015llu-%04d:%d.\n",
+		POWERMON_LOGGER(CALC, INFO, "Removing node %015llu-%04d:%d.\n",
 				activeNodes.activeNode[index].serialNumber.mfgId,
 				activeNodes.activeNode[index].serialNumber.nodeId,
 				activeNodes.activeNode[index].nodeIp);
@@ -375,7 +447,7 @@ void removeActiveNode(unsigned int index)
 		activeNodes.nodeCount-=1;
 	}
 	else
-		POWERMON_LOGGER(CALC, DEBUG, "Active node index (%d) too large.\n",index);
+		POWERMON_LOGGER(CALC, WARN, "Active node index (%d) too large.\n",index);
 }
 
 /* ========================================*/
@@ -402,7 +474,7 @@ void addToPollCycleData(Packet *packet)
  *  initPollCycleDataArray
  */
 /* ========================================*/
-void initPollCycleDataArray(unsigned int array)
+static void initPollCycleDataArray(unsigned int array)
 {
 	if (array < MAX_POLL_CYCLE_DATA_ARRAYS)
 	{
@@ -419,7 +491,7 @@ void initPollCycleDataArray(unsigned int array)
  *
  */
 /* ========================================*/
-void updateCoolingNodeToIdle(ActiveNode *activeNode)
+static void updateCoolingNodeToIdle(ActiveNode *activeNode)
 {
 	time_t currTime;
 	double elapsedTime;
@@ -459,7 +531,7 @@ void updateCoolingNodeToIdle(ActiveNode *activeNode)
  *  Warm node will begin cooling.
  */
 /* ========================================*/
-void updateIdleNodeToCooling(ActiveNode *activeNode)
+static void updateIdleNodeToCooling(ActiveNode *activeNode)
 {
 	time_t currTime;
 	double elapsedTime;
@@ -504,7 +576,7 @@ void updateIdleNodeToCooling(ActiveNode *activeNode)
  *  Visited every poll interval (60 seconds)
  */
 /* ========================================*/
-void updateActiveNodeData(unsigned int array)
+static void updateActiveNodeData(unsigned int array)
 {
 	POWERMON_LOGGER(CALC, INFO, "Updating active nodes from array %d.\n",array);
 	POWERMON_LOGGER(CALC, INFO, "%d entries in pollCycleData[%d]\n", pollCycleData[array].index, array);
@@ -516,8 +588,9 @@ void updateActiveNodeData(unsigned int array)
 
 		if (activeNode)
 		{
-			POWERMON_LOGGER(CALC, DEBUG, "Updating active node: %015llu-%04d.\n",
-					activeNode->serialNumber.mfgId, activeNode->serialNumber.nodeId);
+			POWERMON_LOGGER(CALC, DEBUG, "Updating active node: %015llu-%04d (temp: %d amps: %d)\n",
+					activeNode->serialNumber.mfgId, activeNode->serialNumber.nodeId,
+					activeNode->temp, activeNode->amps);
 
 			activeNode->temp = packet->data.temp;
 			activeNode->amps = packet->data.amps;
@@ -527,15 +600,17 @@ void updateActiveNodeData(unsigned int array)
 			{
 				if (activeNode->nodeOn == TRUE) /* Did it just stop running? */
 				{
-					POWERMON_LOGGER(CALC, TRACE, "Active node %015llu-%04d just went idle. Update.\n",
-							activeNode->serialNumber.mfgId, activeNode->serialNumber.nodeId);
+					POWERMON_LOGGER(CALC, INFO, "Active node %015llu-%04d just went idle (temp: %d amps: %d).\n",
+							activeNode->serialNumber.mfgId, activeNode->serialNumber.nodeId,
+							activeNode->temp, activeNode->amps);
 
 					/* If so indicate it is no longer cooling and update */
 					updateCoolingNodeToIdle(activeNode);
 				}
 				else
-					POWERMON_LOGGER(CALC, TRACE, "Active node %015llu-%04d idle.\n",
-							activeNode->serialNumber.mfgId, activeNode->serialNumber.nodeId);
+					POWERMON_LOGGER(CALC, TRACE, "Active node %015llu-%04d idle (temp: %d amps: %d).\n",
+							activeNode->serialNumber.mfgId, activeNode->serialNumber.nodeId,
+							activeNode->temp, activeNode->amps);
 
 				activeNode->nodeOffCount += 1;
 			}
@@ -543,15 +618,17 @@ void updateActiveNodeData(unsigned int array)
 			{
 				if (activeNode->nodeOn == FALSE) /* Did it just start running? */
 				{
-					POWERMON_LOGGER(CALC, TRACE, "Active node %015llu-%04d just started cooling. Update.\n",
-							activeNode->serialNumber.mfgId, activeNode->serialNumber.nodeId);
+					POWERMON_LOGGER(CALC, INFO, "Active node %015llu-%04d just started cooling (temp: %d amps: %d).\n",
+							activeNode->serialNumber.mfgId, activeNode->serialNumber.nodeId,
+							activeNode->temp, activeNode->amps);
 
 					/* If so indicate it is now cooling and update */
 					updateIdleNodeToCooling(activeNode);
 				}
 				else
-					POWERMON_LOGGER(CALC, TRACE, "Active node %015llu-%04d cooling.\n",
-							activeNode->serialNumber.mfgId, activeNode->serialNumber.nodeId);
+					POWERMON_LOGGER(CALC, TRACE, "Active node %015llu-%04d cooling (temp: %d amps: %d).\n",
+							activeNode->serialNumber.mfgId, activeNode->serialNumber.nodeId,
+							activeNode->temp, activeNode->amps);
 
 				activeNode->nodeOnCount += 1;
 				activeNode->nodeOnAmpsCount += activeNode->amps;
@@ -651,7 +728,7 @@ void insertIntoOffList(ActiveNode *newNode)
 	} while (!done);
 }
 
-void doActiveNodeSort()
+void doActiveNodeSort(void)
 {
 	memset(sysStatus.offNodes, 0, sizeof(sysStatus.offNodes));
 	memset(sysStatus.onNodes, 0, sizeof(sysStatus.onNodes));
@@ -786,7 +863,7 @@ void doPowerCalc(void)
  *  (60 * 24 * 3) remove it from the active node array.
  */
 /* ========================================*/
-void activeNodeHealthCheck(void)
+static void activeNodeHealthCheck(void)
 {
 	for (int i=0; i<activeNodes.nodeCount; i++)
 	{
@@ -808,7 +885,7 @@ void activeNodeHealthCheck(void)
  *  Visited every poll interval (60 seconds)
  */
 /* ========================================*/
-void powermonCalc(unsigned int array)
+static void powermonCalc(unsigned int array)
 {
 	static bool activeCalc = FALSE;
 
@@ -850,7 +927,7 @@ void* powermon_calc_thread_proc(void* arg)
 	do {
 		static unsigned int processArray;
 
-		sleep(60); /* Once a minute */
+		sleep(CALC_INTERVAL); /* Once a minute */
 
 		pthread_mutex_lock(&pwrmonActiveDataArrayMutex);
 
@@ -871,7 +948,7 @@ void* powermon_calc_thread_proc(void* arg)
 
 	pthread_exit((void *)NULL);
 
-	return (void *)NULL;
+	return ((void *)NULL);
 }
 
 /* ========================================*/
@@ -895,5 +972,5 @@ pthread_t powermon_calc_thread_create(unsigned int *calc_thread_active)
 		powermon_calc_tid = 0;
 	}
 
-	return powermon_calc_tid;
+	return (powermon_calc_tid);
 }

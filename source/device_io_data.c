@@ -19,16 +19,17 @@
 /* ============================================================== */
 
 #include <pthread.h>
-#include <unistd.h>
-#include <stdint.h>
 #include <semaphore.h>
+#include <stdint.h>
+#include <unistd.h>
 
 #include "common.h"
 #include "device_io_data.h"
 #include "msg_queues.h"
-#include "pwr_mon_msg.h"
+#include "powermon_curses.h"
 #include "powermon_logger.h"
 #include "powermon_socket.h"
+#include "pwr_mon_msg.h"
 
 pthread_t device_io_data_tid = (pthread_t)NULL;
 
@@ -75,42 +76,44 @@ void decodePowerMonPkt(char *packet, int msgLen)
 		float temp = pkt->data.temp;
 		char *mode, *oper;
 
-		printf("Packet data:\n");
-		printf("\t  version: %d\n", pkt->version);
-		printf("\t  serial#: %015llu-%04d\n", pkt->node.serialNumber.mfgId, pkt->node.serialNumber.nodeId);
+		printw("Packet data:\n");
+		printw("\t  version: %d\n", pkt->version);
+		printw("\t  serial#: %015llu-%04d\n", pkt->node.serialNumber.mfgId, pkt->node.serialNumber.nodeId);
 		unsigned char *nodeIp = (unsigned char *)&pkt->node.nodeIp;
-		printf("\t   nodeIp: %d.%d.%d.%d\n", nodeIp[0], nodeIp[1], nodeIp[2], nodeIp[3]);
+		printw("\t   nodeIp: %d.%d.%d.%d\n", nodeIp[0], nodeIp[1], nodeIp[2], nodeIp[3]);
 		if (pkt->node.mode)
 			mode = "Auto";
 		else
 			mode = "Off";
-		printf("\t     mode: %s\n", mode);
+		printw("\t     mode: %s\n", mode);
 		if (pkt->node.operation)
 			oper = "Normal";
 		else
 			oper = "Defrost";
-		printf("\toperation: %s\n", oper);
-		printf("\t     temp: %.2f\n", temp/100);
-		printf("\t     amps: %d\n", pkt->data.amps);
-		printf("\n");
+		printw("\toperation: %s\n", oper);
+		printw("\t     temp: %.2f\n", temp/100);
+		printw("\t     amps: %d\n", pkt->data.amps);
+		printw("\n");
+		refresh();
 	}
 #endif
 #if 0
-	printf("Raw packet data:\n");
+	printw("Raw packet data:\n");
 	for (int i=0, j=0; i<msgLen; i++, j++)
 	{
-		printf("%02x ", (unsigned char)packet[i]);
+		printw("%02x ", (unsigned char)packet[i]);
 
 		if (j==7)
-			printf("  ");
+			printw("  ");
 		else if (j==15)
 		{
-			printf("\n");
+			printw("\n");
 			j=-1;
 		}
 	}
 
-	printf("\n\n");
+	printw("\n\n");
+	refresh();
 #endif
 }
 
@@ -135,9 +138,9 @@ static msg_q_status_e send_msg(pwrmon_msg_t *msg, msg_q_client_e client)
 	if (status != msg_q_status_success)
 		POWERMON_LOGGER(DEV_IO, WARN, "Bad return from msg_q_send.\n",0);
 	else
-		POWERMON_LOGGER(DEV_IO, INFO, "Message sent to %s client.\n", msg_q_get_client_name(client));
+		POWERMON_LOGGER(DEV_IO, DEBUG, "Message sent to %s client.\n", msg_q_get_client_name(client));
 
-	return status;
+	return (status);
 }
 
 /* ========================================*/
@@ -186,7 +189,7 @@ void* device_io_data_thread(void *arg)
 
 	pthread_exit((void *)NULL);
 
-	return (void *)NULL;
+	return ((void *)NULL);
 }
 
 /* ========================================*/
@@ -208,5 +211,5 @@ pthread_t device_io_data_thread_create(unsigned int *data_thread_active)
     	device_io_data_tid = (pthread_t)NULL;
     }
 
-    return device_io_data_tid;
+    return (device_io_data_tid);
 }

@@ -1,6 +1,6 @@
 /* ============================================================== */
 /*
- * user_io.h
+ * add_user_ctxt.h
  *
  * Copyright (c) 2020 David Hammond
  * All Rights Reserved.
@@ -17,17 +17,10 @@
  * is obtained David Hammond.
  */
 /* ============================================================== */
-#ifndef __USER_IO_H__
-#define __USER_IO_H__
 
-#include <semaphore.h>
-#include <pthread.h>
+#ifndef __INCLUDE_ADD_USER_CTXT_H__
+#define __INCLUDE_ADD_USER_CTXT_H__
 
-#include "credentials.h"
+void add_user_context(void);
 
-pthread_t get_user_io_tid(void);
-void user_io_thread_create(sem_t *sem);
-void user_io_send_credentials(credentials_t *credentials);
-void user_io_send_exit_msg(void);
-
-#endif /* __USER_IO_H__ */
+#endif /* __INCLUDE_ADD_USER_CTXT_H__ */

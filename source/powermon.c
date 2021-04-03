@@ -52,7 +52,7 @@ static msg_q_status_e send_msg(pwrmon_msg_t *msg, msg_q_client_e client)
 	msg->src = msg_q_client_powermon;
 	msg->version = PWR_MON_MSG_VERSION;
 
-	POWERMON_LOGGER(PWRMON, DEBUG, "Sending msg (len: %d) to client %d.\n", msgLen, client);
+	POWERMON_LOGGER(PWRMON, DEBUG, "Sending msg (len: %d) to client %s.\n", msgLen, msg_q_get_client_name(client));
 	status = msg_q_send(client, (char *)msg, msgLen);
 
 	if (status != msg_q_status_success)
@@ -60,7 +60,7 @@ static msg_q_status_e send_msg(pwrmon_msg_t *msg, msg_q_client_e client)
 	else
 		POWERMON_LOGGER(PWRMON, DEBUG, "Message sent to %s client.\n", msg_q_get_client_name(client));
 
-	return status;
+	return (status);
 }
 
 /* ========================================*/
@@ -79,11 +79,10 @@ static unsigned int process_received_msg(pwrmon_msg_t *msg, const char msgLen)
 
 	case pwr_mon_msg_id_credentials:
 
-		POWERMON_LOGGER(PWRMON, INFO, "Received user request from %s client containing login credentials.\n", msg_src);
+		POWERMON_LOGGER(PWRMON, DEBUG, "Received user request from %s client to validate credentials.\n", msg_src);
 
-		credentials_t *credentials = (credentials_t *)msg->data;
-		POWERMON_LOGGER(PWRMON, DEBUG, "username: %s\n", credentials->username);
-		POWERMON_LOGGER(PWRMON, DEBUG, "password: %s\n", credentials->password);
+		POWERMON_LOGGER(PWRMON, DEBUG, "username: %s\n", get_username());
+		POWERMON_LOGGER(PWRMON, DEBUG, "password: %s\n", get_password());
 
 		status = send_msg(msg, msg_q_client_data_store);
 		if (status != msg_q_status_success)
@@ -93,7 +92,7 @@ static unsigned int process_received_msg(pwrmon_msg_t *msg, const char msgLen)
 
 	case pwr_mon_msg_id_device_io_data:
 
-		POWERMON_LOGGER(PWRMON, INFO, "Received user request from %s client containing power data.\n", msg_src);
+		POWERMON_LOGGER(PWRMON, DEBUG, "Received user request from %s client containing power data.\n", msg_src);
 		addToPollCycleData((Packet *)(msg->data));
 		break;
 
@@ -104,8 +103,7 @@ static unsigned int process_received_msg(pwrmon_msg_t *msg, const char msgLen)
 		for (msg_q_client_e client = msg_q_client_first; client <= msg_q_client_last; client++)
 		{
 			if ((client != msg_q_client_powermon) &&
-				(client != msg_q_client_console_io)&&
-				(client != msg_q_client_xconsole_io))
+				(client != msg_q_client_console_io))
 			{
 				status = send_msg(msg, client);
 				if (status != msg_q_status_success)
@@ -113,17 +111,18 @@ static unsigned int process_received_msg(pwrmon_msg_t *msg, const char msgLen)
 			}
 		}
 
+		POWERMON_LOGGER(PWRMON, DEBUG, "Signal the AVAHI service thread to terminate.\n", msg_src);
 		set_avahi_thread_inactive();
 		thread_active = FALSE;
 		break;
 
 	default:
-		POWERMON_LOGGER(PWRMON, DEBUG, "Received unhandled message from %s client.\n", msg_src);
+		POWERMON_LOGGER(PWRMON, WARN, "Received unhandled message from %s client.\n", msg_src);
 		thread_active = TRUE;
 		break;
 	}
 
-	return thread_active;
+	return (thread_active);
 }
 
 /* ========================================*/
@@ -189,7 +188,7 @@ void* powermon_thread(void *arg)
 
 	pthread_exit((void *)NULL);
 
-	return (void *)NULL;
+	return ((void *)NULL);
 }
 
 /* =================================
@@ -197,7 +196,7 @@ void* powermon_thread(void *arg)
  */
 pthread_t get_powermon_tid(void)
 {
-	return powermon_tid;
+	return (powermon_tid);
 }
 
 /* ========================================*/

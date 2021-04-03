@@ -28,6 +28,7 @@
 #include "common.h"
 #include "msg_queues.h"
 #include "pwr_mon_msg.h"
+#include "powermon_curses.h"
 #include "powermon_logger.h"
 #include "credentials.h"
 #include "sha3c.h"
@@ -73,16 +74,17 @@ static msg_q_status_e send_msg(pwrmon_msg_t *msg, msg_q_client_e client)
 	if (status != msg_q_status_success)
 		POWERMON_LOGGER(DSTORE, WARN, "Bad return from msg_q_send.\n",0);
 	else
-		POWERMON_LOGGER(DSTORE, INFO, "Message sent to %s client.\n", msg_q_get_client_name(client));
+		POWERMON_LOGGER(DSTORE, DEBUG, "Message sent to %s client.\n", msg_q_get_client_name(client));
 
-	return status;
+	return (status);
 }
 
 /* =================================
  * validate_login_credentials
  */
-static unsigned int validate_login_credentials(char *username, unsigned char *hash)
+static unsigned int validate_login_credentials(const char *username, const unsigned char *hash)
 {
+	POWERMON_LOGGER(DSTORE, TRACE, "Function: validate_login_credentials\n", 0);
 
 	unsigned int login_valid = FALSE;
 
@@ -99,32 +101,34 @@ static unsigned int validate_login_credentials(char *username, unsigned char *ha
 			(strcmp(loginAccounts.account[i].user, username) == 0) &&
 			(memcmp(loginAccounts.account[i].hash, hash, SHA3_HASH_LEN) == 0))
 		{
+			POWERMON_LOGGER(DSTORE, DEBUG, "Login is valid\n", 0);
 			login_valid = TRUE;
 			break;
 		}
 	}
 
 #if 0
-	printf("username: %s\n", username);
-	printf("hash:\t");
+	printw("username: %s\n", username);
+	printw("hash:\t");
 	for(int i=0, j=0; i<SHA3_KECCAK_SPONGE_WORDS*8; i++, j++)
 	{
 
-		printf("%02x", (unsigned char)*(hash+i));
-		if (j==7) printf(" ");
-		else if (j==15) { j=(-1); printf("\n\t"); }
+		printw("%02x", (unsigned char)*(hash+i));
+		if (j==7) printw(" ");
+		else if (j==15) { j=(-1); printw("\n\t"); }
 	}
-	printf("\n");
+	printw("\n");
+	refresh();
 #endif
 
-	return login_valid;
+	return (login_valid);
 }
 
 /* =================================
  * process_login_credentials
  */
 
-static unsigned int process_login_credentials(credentials_t *credentials)
+static unsigned int process_login_credentials(void)
 {
 	unsigned int login_valid = TRUE;
 	sha3_context ctxt;
@@ -132,15 +136,18 @@ static unsigned int process_login_credentials(credentials_t *credentials)
 
 	memset(&ctxt, 0, sizeof(sha3_context));
 
+	const char *password = get_password();
+	const char *username = get_username();
+
     sha3_Init256(&ctxt);
-    sha3_Update(&ctxt, credentials->password, strlen(credentials->password));
+    sha3_Update(&ctxt, password, strlen(password));
     hash = (uint8_t *)sha3_Finalize(&ctxt);
-    // 'hash' points to a buffer inside 'ctxt'
-    // with the value of SHA3-256
+    /*
+     * 'hash' points to a buffer inside 'ctxt' with the value of SHA3-256
+     */
+    login_valid = validate_login_credentials(username, hash);
 
-    login_valid = validate_login_credentials(credentials->username, hash);
-
-	return login_valid;
+	return (login_valid);
 }
 
 /* =================================
@@ -157,18 +164,20 @@ static unsigned int process_received_msg(pwrmon_msg_t *msg, const char msgLen)
 
 	case pwr_mon_msg_id_credentials:
 
-		POWERMON_LOGGER(DSTORE, INFO, "Received msg from %s client containing login credentials.\n", msg_src);
+		POWERMON_LOGGER(DSTORE, DEBUG, "Received msg from %s client to validate login credentials.\n", msg_src);
 
-		credentials_t *credentials = (credentials_t *)msg->data;
-		POWERMON_LOGGER(DSTORE, DEBUG, "%s: username: %s\n", __FUNCTION__, credentials->username);
-		POWERMON_LOGGER(DSTORE, DEBUG, "%s: password: %s\n", __FUNCTION__, credentials->password);
-
-		login_valid = process_login_credentials(credentials);
+		login_valid = process_login_credentials();
 
 		if (login_valid)
-			credentials->valid = pwr_mon_credentials_valid;
+		{
+			POWERMON_LOGGER(DSTORE, TRACE, "Call to set credentials valid\n", 0);
+			set_credentials_valid();
+		}
 		else
-			credentials->valid = pwr_mon_credentials_invalid;
+		{
+			POWERMON_LOGGER(DSTORE, TRACE, "Call to set credentials invalid\n", 0);
+			set_credentials_invalid();
+		}
 
 		msg->type = pwr_mon_msg_type_rsp;
 		send_msg(msg, msg->src);
@@ -179,7 +188,7 @@ static unsigned int process_received_msg(pwrmon_msg_t *msg, const char msgLen)
 		break;
 
 	case pwr_mon_msg_id_exit:
-		POWERMON_LOGGER(DSTORE, INFO, "Received msg from %s client to exit thread.\n", msg_src);
+		POWERMON_LOGGER(DSTORE, DEBUG, "Received msg from %s client to exit thread.\n", msg_src);
 		thread_active = FALSE;
 		break;
 
@@ -188,7 +197,7 @@ static unsigned int process_received_msg(pwrmon_msg_t *msg, const char msgLen)
 		break;
 	}
 
-	return thread_active;
+	return (thread_active);
 }
 
 void resetDefaultAccount(void)
@@ -229,7 +238,7 @@ void* data_store_thread(void *arg)
 
 			memset(msg, 0, msgLen);
 
-			POWERMON_LOGGER(DSTORE, INFO, "Waiting on message queue receive.\n",0);
+			POWERMON_LOGGER(DSTORE, DEBUG, "Waiting on message queue receive.\n",0);
 			status = msg_q_rcv(msg_q_client_data_store, msg, &msgLen);
 			POWERMON_LOGGER(DSTORE, DEBUG, "Received message of len %d over msg q.\n", msgLen);
 
@@ -255,7 +264,7 @@ void* data_store_thread(void *arg)
 	POWERMON_LOGGER(DSTORE, THREAD, "Exiting data_store thread.\n",0);
 	pthread_exit((void *)NULL);
 
-	return (void *)NULL;
+	return ((void *)NULL);
 }
 
 /* =================================
@@ -263,7 +272,7 @@ void* data_store_thread(void *arg)
  */
 pthread_t get_data_store_tid(void)
 {
-	return data_store_tid;
+	return (data_store_tid);
 }
 
 /* =================================

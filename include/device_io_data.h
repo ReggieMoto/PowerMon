@@ -26,6 +26,7 @@
 #ifndef __DEVICE_IO_DATA_H__
 #define __DEVICE_IO_DATA_H__
 
+#include <stdbool.h>
 #include <time.h>
 #include "common.h"
 #include "powermon_pkt.h"
@@ -37,6 +38,9 @@
 
 #define MAX_COUNT_SAMPLES 7
 
+/*
+ * Represents a node being managed by PowerMon
+ */
 typedef struct _activeNode {
 	SerialNumber_t serialNumber;
 	unsigned int nodeIp;

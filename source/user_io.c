@@ -26,17 +26,21 @@
 #include <semaphore.h>
 
 #include "common.h"
-#include "msg_queues.h"
-#include "pwr_mon_msg.h"
-#include "powermon_logger.h"
 #include "credentials.h"
+#include "login_ctxt.h"
+#include "msg_queues.h"
+#include "powermon_logger.h"
+#include "pwr_mon_msg.h"
 #include "user_io_fsm.h"
 
 extern pthread_t console_io_thread_create(unsigned int *console_io_thread_active);
 extern void user_io_fsm_process_string(pwrmon_msg_t *msg);
 
+/*
+ * TODO: Remove
 extern sem_t powermon_login_sem;
 extern unsigned int login_successful;
+*/
 
 static pthread_t user_io_tid = (pthread_t)NULL;
 
@@ -52,6 +56,8 @@ static msg_q_status_e send_msg(char *buffer, int buf_len, pwr_mon_msg_id_e id, m
 	char *msg_dst = msg_q_get_client_name(client);
 	unsigned int msgLen = sizeof(pwrmon_msg_t);
 
+	POWERMON_LOGGER(USER_IO, TRACE, "Function: send_msg\n", 0);
+
 	/* Prepare the msg q header */
 	msg.src = msg_q_client_user_io;
 	msg.id = id;
@@ -66,9 +72,9 @@ static msg_q_status_e send_msg(char *buffer, int buf_len, pwr_mon_msg_id_e id, m
 	if (status != msg_q_status_success)
 		POWERMON_LOGGER(USER_IO, FATAL, "Bad return from msg_q_rcv.\n",0);
 	else
-		POWERMON_LOGGER(USER_IO, INFO, "Message sent to %s client.\n", msg_dst);
+		POWERMON_LOGGER(USER_IO, DEBUG, "Message sent to %s client.\n", msg_dst);
 
-	return status;
+	return (status);
 }
 
 void user_io_send_exit_msg(void)
@@ -78,7 +84,7 @@ void user_io_send_exit_msg(void)
 
 void user_io_send_credentials(credentials_t *credentials)
 {
-	send_msg((char *)credentials, sizeof(credentials_t), pwr_mon_msg_id_credentials, msg_q_client_data_store);
+	send_msg(NULL, 0, pwr_mon_msg_id_credentials, msg_q_client_data_store);
 }
 
 /* =================================
@@ -86,76 +92,104 @@ void user_io_send_credentials(credentials_t *credentials)
  */
 static void process_keypress(pwrmon_msg_t *msg)
 {
+	POWERMON_LOGGER(USER_IO, TRACE, "Function: process_keypress\n", 0);
+
 	switch(msg->data[0]) {
 
 	case 'b':
 	case 'B':
-		POWERMON_LOGGER(USER_IO, INFO, "Received user keypress 'b'.\n", 0);
+		POWERMON_LOGGER(USER_IO, DEBUG, "Received user keypress 'b'.\n", 0);
 		user_io_fsm(user_io_input_key_b);
 		break;
 
 	case 'c':
 	case 'C':
-		POWERMON_LOGGER(USER_IO, INFO, "Received user keypress 'c'.\n", 0);
+		POWERMON_LOGGER(USER_IO, DEBUG, "Received user keypress 'c'.\n", 0);
 		user_io_fsm(user_io_input_key_c);
 		break;
 
 	case 'd':
 	case 'D':
-		POWERMON_LOGGER(USER_IO, INFO, "Received user keypress 'd'.\n", 0);
+		POWERMON_LOGGER(USER_IO, DEBUG, "Received user keypress 'd'.\n", 0);
 		user_io_fsm(user_io_input_key_d);
+		break;
+
+	case 'e':
+	case 'E':
+		POWERMON_LOGGER(USER_IO, DEBUG, "Received user keypress 'e'.\n", 0);
+		user_io_fsm(user_io_input_key_e);
 		break;
 
 	case 'l':
 	case 'L':
-		POWERMON_LOGGER(USER_IO, INFO, "Received user keypress 'l'.\n", 0);
+		POWERMON_LOGGER(USER_IO, DEBUG, "Received user keypress 'l'.\n", 0);
 		user_io_fsm(user_io_input_key_l);
 		break;
 
 	case 'm':
 	case 'M':
-		POWERMON_LOGGER(USER_IO, INFO, "Received user keypress 'm'.\n", 0);
+		POWERMON_LOGGER(USER_IO, DEBUG, "Received user keypress 'm'.\n", 0);
 		user_io_fsm(user_io_input_key_m);
 		break;
 
 	case 'n':
 	case 'N':
-		POWERMON_LOGGER(USER_IO, INFO, "Received user keypress 'n'.\n", 0);
+		POWERMON_LOGGER(USER_IO, DEBUG, "Received user keypress 'n'.\n", 0);
 		user_io_fsm(user_io_input_key_n);
 		break;
 
 	case 'o':
 	case 'O':
-		POWERMON_LOGGER(USER_IO, INFO, "Received user keypress 'o'.\n", 0);
+		POWERMON_LOGGER(USER_IO, DEBUG, "Received user keypress 'o'.\n", 0);
 		user_io_fsm(user_io_input_key_o);
+		break;
+
+	case 'p':
+	case 'P':
+		POWERMON_LOGGER(USER_IO, DEBUG, "Received user keypress 'p'.\n", 0);
+		user_io_fsm(user_io_input_key_p);
 		break;
 
 	case 'r':
 	case 'R':
-		POWERMON_LOGGER(USER_IO, INFO, "Received user keypress 'r'.\n", 0);
+		POWERMON_LOGGER(USER_IO, DEBUG, "Received user keypress 'r'.\n", 0);
 		user_io_fsm(user_io_input_key_r);
 		break;
 
 	case 't':
 	case 'T':
-		POWERMON_LOGGER(USER_IO, INFO, "Received user keypress 't'.\n", 0);
+		POWERMON_LOGGER(USER_IO, DEBUG, "Received user keypress 't'.\n", 0);
 		user_io_fsm(user_io_input_key_t);
 		break;
 
 	case 'u':
 	case 'U':
-		POWERMON_LOGGER(USER_IO, INFO, "Received user keypress 'u'.\n", 0);
+		POWERMON_LOGGER(USER_IO, DEBUG, "Received user keypress 'u'.\n", 0);
 		user_io_fsm(user_io_input_key_u);
 		break;
 
 	case 'x':
 	case 'X':
-		POWERMON_LOGGER(USER_IO, INFO, "Received user keypress 'x'.\n", 0);
+		POWERMON_LOGGER(USER_IO, DEBUG, "Received user keypress 'x'.\n", 0);
 		user_io_fsm(user_io_input_key_x);
 		break;
 
+	case '1':
+	case '2':
+	case '3':
+	case '4':
+	case '5':
+	case '6':
+	case '7':
+	case '8':
+	case '9':
+		POWERMON_LOGGER(USER_IO, DEBUG, "Received user numeric input.\n", 0);
+		user_io_fsm_process_string(msg);
+		break;
+
 	default:
-		POWERMON_LOGGER(USER_IO, INFO, "Received unhandled keypress (ignored).\n", 0);
+		POWERMON_LOGGER(USER_IO, DEBUG, "Received unhandled keypress.\n", 0);
+		user_io_fsm(user_io_input_unhandled);
 		break;
 	}
 }
@@ -169,33 +203,40 @@ static unsigned int process_received_msg(pwrmon_msg_t *msg, const char msgLen)
 	unsigned int thread_active = TRUE;
 	msg_q_client_e src = msg->src;
 	char *msg_src = msg_q_get_client_name(src);
-	credentials_t *credentials;
+
+	POWERMON_LOGGER(USER_IO, TRACE, "Function: process_received_msg\n", 0);
 
 	switch(msg->id) {
 
 	case pwr_mon_msg_id_exit:
-		POWERMON_LOGGER(USER_IO, INFO, "Received msg from %s client to exit thread.\n", msg_src);
+		POWERMON_LOGGER(USER_IO, DEBUG, "Received msg from %s client to exit thread.\n", msg_src);
 		thread_active = FALSE;
 		break;
 
 	case pwr_mon_msg_id_credentials:
-		credentials = (credentials_t *)msg->data;
-		if (credentials->valid == pwr_mon_credentials_valid)
+
+		if (are_credentials_valid() == true)
+		{
+			POWERMON_LOGGER(USER_IO, DEBUG, "Login credentials are valid.\n", 0);
 			user_io_fsm(user_io_input_login_valid);
+		}
 		else
+		{
+			POWERMON_LOGGER(USER_IO, DEBUG, "Login credentials are invalid.\n", 0);
 			user_io_fsm(user_io_input_login_invalid);
+		}
 
 		break;
 
 	case pwr_mon_msg_id_kbd_input_str:
 		if (strlen(msg->data) == 1)
 		{
-			POWERMON_LOGGER(USER_IO, INFO, "Received keypress from %s client.\n", msg_src);
+			POWERMON_LOGGER(USER_IO, DEBUG, "Received keypress from %s client.\n", msg_src);
 			process_keypress(msg);
 		}
 		else if (strlen(msg->data) > 1)
 		{
-			POWERMON_LOGGER(USER_IO, INFO, "Received input string from %s client.\n", msg_src);
+			POWERMON_LOGGER(USER_IO, DEBUG, "Received input string from %s client.\n", msg_src);
 			user_io_fsm_process_string(msg);
 		}
 		else
@@ -204,11 +245,11 @@ static unsigned int process_received_msg(pwrmon_msg_t *msg, const char msgLen)
 		break;
 
 	default:
-		POWERMON_LOGGER(USER_IO, INFO, "Received unknown message from %s client.\n", msg_src);
+		POWERMON_LOGGER(USER_IO, WARN, "Received unknown message from %s client.\n", msg_src);
 		break;
 	}
 
-	return thread_active;
+	return (thread_active);
 }
 
 #if 0
@@ -238,7 +279,11 @@ void* user_io_thread(void *arg)
 		sem_wait(sem);
 		POWERMON_LOGGER(USER_IO, THREAD, "%s is alive.\n", __FUNCTION__);
 		console_io_tid = console_io_thread_create(&console_thread_active);
-		user_io_fsm(user_io_input_login_start);
+
+		/* Initialize the user I/O FSM */
+		user_io_fsm_init();
+		/* Establish the initial context: login */
+		login_context();
 
 		do {
 			static char msg[MAX_MESSAGE_SIZE];
@@ -247,7 +292,7 @@ void* user_io_thread(void *arg)
 			/* Wait on message queue */
 			memset(msg, 0, msgLen);
 
-			POWERMON_LOGGER(USER_IO, INFO, "Waiting on message queue receive.\n",0);
+			POWERMON_LOGGER(USER_IO, DEBUG, "Waiting on message queue receive.\n",0);
 			status = msg_q_rcv(msg_q_client_user_io, msg, &msgLen);
 			POWERMON_LOGGER(USER_IO, DEBUG, "Received message of len %d.\n", msgLen);
 
@@ -280,7 +325,7 @@ void* user_io_thread(void *arg)
 
 	pthread_exit((void *)NULL);
 
-	return (void *)NULL;
+	return ((void *)NULL);
 }
 
 /* =================================
@@ -288,7 +333,7 @@ void* user_io_thread(void *arg)
  */
 pthread_t get_user_io_tid(void)
 {
-	return user_io_tid;
+	return (user_io_tid);
 }
 
 /* =================================

@@ -1,9 +1,10 @@
 /* ============================================================== */
 /*
- * user_io.h
+ * powermon_curses.h
  *
  * Copyright (c) 2020 David Hammond
  * All Rights Reserved.
+ *
  */
 /* ============================================================== */
 /*
@@ -17,17 +18,14 @@
  * is obtained David Hammond.
  */
 /* ============================================================== */
-#ifndef __USER_IO_H__
-#define __USER_IO_H__
 
-#include <semaphore.h>
-#include <pthread.h>
 
-#include "credentials.h"
+#include "ncurses.h"
 
-pthread_t get_user_io_tid(void);
-void user_io_thread_create(sem_t *sem);
-void user_io_send_credentials(credentials_t *credentials);
-void user_io_send_exit_msg(void);
+#ifndef __POWERMON_CURSES_H__
+#define __POWERMON_CURSES_H__
 
-#endif /* __USER_IO_H__ */
+int initialize_curses(void);
+void close_curses(void);
+
+#endif /* __POWERMON_CURSES_H__ */

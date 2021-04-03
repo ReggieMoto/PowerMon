@@ -21,20 +21,23 @@
 #ifndef __COMMON_H__
 #define __COMMON_H__
 
+#ifndef TRUE
 #define TRUE (1==1)
+#endif
+#ifndef FALSE
 #define FALSE (1==0)
+#endif
 
 #define SUCCESS 0
 #define FAILURE -1
 
-typedef unsigned int bool;
+#define MAX_KBD_INPUT_STR_LEN 32u
 
-#define MAX_KBD_INPUT_STR_LEN 32
+#define SRC_ADDR_LEN 14u;
 
-#define SRC_ADDR_LEN 14;
+#define MAX_POWERMON_NODES 48u
 
-#define MAX_POWERMON_NODES 48
-
-
+#define POWERMON_LOG_DIR "/home/PowerMon/log/"
+#define POWERMON_COREDUMP_DIR "/home/PowerMon/core/"
 
 #endif /* __COMMON_H__ */

@@ -1,8 +1,8 @@
 /* ============================================================== */
 /*
- * login.c
+ * powermon_curses.c
  *
- * Copyright (c) 2017 David Hammond
+ * Copyright (c) 2020 David Hammond
  * All Rights Reserved.
  */
 /* ============================================================== */
@@ -18,30 +18,35 @@
  */
 /* ============================================================== */
 
-#include <stdio.h>
+#include <ncurses.h>
+#include <stddef.h>
 
-void top_menu_screen(void)
+#include "powermon_logger.h"
+
+static WINDOW *window;
+
+int initialize_curses(void)
 {
-	printf("\n\n\t ======================\n");
-	printf("\t|                      |\n");
-	printf("\t|  PowerMon Top Menu   |\n");
-	printf("\t|                      |\n");
-	printf("\t ======================\n");
-	printf("\t|                      |\n");
-	printf("\t|     c - config       |\n");
-	printf("\t|     r - report       |\n");
-	printf("\t|   ----------------   |\n");
-	printf("\t|     o - logout       |\n");
-	printf("\t|     x - exit         |\n");
-	printf("\t|                      |\n");
-	printf("\t ======================\n\n");
-	printf("\t\t: ");
-	fflush(stdout);
+	int status = 0;
 
+	window = initscr();
+
+	if (window == NULL)
+	{
+		status = -1;
+	}
+	else
+	{
+		raw();
+		noecho();
+
+		erase(); /* Clear the screen */
+	}
+
+	return status;
 }
 
-void menu_prompt(void)
+void close_curses(void)
 {
-	printf("\t\t: ");
-	fflush(stdout);
+	endwin();
 }

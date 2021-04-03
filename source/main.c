@@ -28,9 +28,11 @@
 #include <pthread.h>
 #include <mqueue.h>
 #include <semaphore.h>
+#include <sys/resource.h>
 
 #include "common.h"
 #include "msg_queues.h"
+#include "powermon_curses.h"
 #include "powermon_logger.h"
 #include "powermon_time.h"
 #include "powermon_svc.h"
@@ -38,6 +40,13 @@
 #include "user_io.h"
 #include "device_io.h"
 #include "data_store.h"
+
+#define CORE_RLIM_CUR (128*(1024*1024)) /* 128 MB */
+
+static const struct rlimit pwrmon_limits = {
+	.rlim_cur = CORE_RLIM_CUR,
+	.rlim_max = CORE_RLIM_CUR
+};
 
 void sighandler(int signum)
 {
@@ -48,35 +57,62 @@ void sighandler(int signum)
 
 int main(int argc, char *argv[])
 {
+	int status;
+
+	/* /var/lib/systemd/coredump */
+	status = setrlimit(RLIMIT_CORE, &pwrmon_limits);
+
+	if (status < 0)
+	{
+		printf("Failed to set core ulimit: ERRNO: %d\n", errno);
+		goto exit;
+	}
+
+	signal(SIGSEGV, sighandler);
+	time_t tm = getPwrmonSystemStartTime();
+
+	/* Create working directories */
+	struct stat st = {0};
+
+	/* log */
+	if ((stat(POWERMON_LOG_DIR, &st) == -1) && (errno == ENOENT))
+		if (mkdir(POWERMON_LOG_DIR, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH))
+		{
+			printf("Unable to create log directory.\n\n");
+			exit(1);
+		}
+
+	/* core */
+	if ((stat(POWERMON_COREDUMP_DIR, &st) == -1) && (errno == ENOENT))
+		if (mkdir(POWERMON_COREDUMP_DIR, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH))
+		{
+			printf("Unable to create core directory.\n\n");
+			exit(1);
+		}
+
+	status = initialize_curses();
+
+	if (status < 0)
+	{
+		printf("Failed to initialize curses. Exiting.\n");
+		goto exit;
+	}
+
+	status = powermon_logger_init();
+
+	if (status < 0)
+	{
+		printw("Failed to open logger.\n");
+		refresh();
+		close_curses();
+		goto exit;
+	}
+
 	sem_t avahi_svc_sem;
 	sem_t powermon_sem;
 	sem_t user_io_sem;
 	sem_t device_io_sem;
 	sem_t data_store_sem;
-
-	signal(SIGSEGV, sighandler);
-	time_t tm = getPwrmonSystemStartTime();
-
-#if 0
-	/* Create working directories */
-	struct stat st = {0};
-
-	/* log */
-	if ((stat("/home/PowerMon/log", &st) == -1) && (errno == ENOENT))
-		if (mkdir("/home/PowerMon/log", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH))
-		{
-			printf("Unable to create log directory in home directory.\n\n");
-			exit(1);
-		}
-
-	/* core */
-	if ((stat("/home/PowerMon/core", &st) == -1) && (errno == ENOENT))
-		if (mkdir("/home/PowerMon/core", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH))
-		{
-			printf("Unable to create core directory in home directory.\n\n");
-			exit(1);
-		}
-#endif
 
 	/* Initialize system semaphores */
 	sem_init(&avahi_svc_sem, 0, 0);
@@ -84,9 +120,6 @@ int main(int argc, char *argv[])
 	sem_init(&user_io_sem, 0, 0);
 	sem_init(&device_io_sem, 0, 0);
 	sem_init(&data_store_sem, 0, 0);
-
-	msg_q_init();
-	powermon_logger_init();
 
 	POWERMON_LOGGER(MAIN, INFO, "PowerMon starting up at %s.\n\n", ctime(&tm));
 
@@ -112,14 +145,25 @@ int main(int argc, char *argv[])
 	sem_post(&device_io_sem);
 	sem_post(&data_store_sem);
 
+	/*
+	 * As this is an embedded system we should never reach here.
+	 */
+	void *end;
+
 	/* Wait here to join all active threads upon exit */
-	pthread_join(get_avahi_svc_tid(), (void**)NULL);
-	pthread_join(get_powermon_tid(), (void**)NULL);
-	pthread_join(get_user_io_tid(), (void**)NULL);
-	pthread_join(get_device_io_tid(), (void**)NULL);
-	pthread_join(get_data_store_tid(), (void**)NULL);
+	pthread_join(get_avahi_svc_tid(), &end);
+	pthread_join(get_powermon_tid(), &end);
+	pthread_join(get_user_io_tid(), &end);
+	pthread_join(get_device_io_tid(), &end);
+	pthread_join(get_data_store_tid(), &end);
 
 	POWERMON_LOGGER(MAIN, THREAD, "All PowerMon threads terminated.\n\n",0);
 
-	return 0;
+	powermon_logger_shutdown();
+
+	close_curses();
+
+exit:
+
+	return (0);
 }
