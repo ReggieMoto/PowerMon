@@ -98,14 +98,14 @@ static int logger_close_logfile(void)
 	return status;
 }
 
-#define MAX_LOGGER_FILESIZE (8*1024) /* 8k filesize */
+#define MAX_LOGGER_FILESIZE (5*1024*1024) /* 5MB filesize */
 
 static int logger_log_entry(char *log_entry)
 {
 	int status = 0;
 	char log_str[STR_ENTRY_LEN];
 
-	if ((strlen(log_entry) + filesize) >= MAX_LOGGER_FILESIZE)
+	if ((filesize += strlen(log_entry)) >= MAX_LOGGER_FILESIZE)
 	{
 		status = logger_close_logfile();
 		if (status == 0)
@@ -127,8 +127,8 @@ static int logger_log_entry(char *log_entry)
 		strncat(log_str, log_entry, remaining-1);
 
 		status = fwrite(log_str, strlen(log_str), 1, logfd);
-		//fdatasync(fileno(logfd));
-		fsync(fileno(logfd));
+		fdatasync(fileno(logfd));
+		//fsync(fileno(logfd));
 	}
 
 	if (status == 0)
@@ -329,8 +329,8 @@ int powermon_logger_init(void)
 				tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
 		refresh();
 
-		set_logger_level(TRACE);
-		set_logger_thread(ALL);
+		set_logger_level(DEBUG);
+		set_logger_thread(CALC);
 	}
 	else
 	{

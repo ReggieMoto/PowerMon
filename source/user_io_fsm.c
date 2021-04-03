@@ -21,8 +21,9 @@
 #include <string.h>
 
 #include "credentials.h"
-#include "user_io_fsm.h"
 #include "powermon_logger.h"
+#include "report_ctxt.h"
+#include "user_io_fsm.h"
 
 /* Initialized when starting up the user_io thread */
 static io_context_t *current_context = NULL;
@@ -69,6 +70,15 @@ static const char *user_io_fsm_input_str[] = {
 	"user_io_input_key_t",
 	"user_io_input_key_u",
 	"user_io_input_key_x",
+	"user_io_input_key_1",
+	"user_io_input_key_2",
+	"user_io_input_key_3",
+	"user_io_input_key_4",
+	"user_io_input_key_5",
+	"user_io_input_key_6",
+	"user_io_input_key_7",
+	"user_io_input_key_8",
+	"user_io_input_key_9",
 	"user_io_input_unhandled"
 };
 
@@ -118,6 +128,12 @@ void user_io_fsm_process_string(pwrmon_msg_t *msg)
 			current_context->context();
 		}
 		break;
+
+	case user_io_state_report:
+		configure_input(msg);
+		user_io_fsm(user_io_input_key_numeric);
+		break;
+
 	default:
 		POWERMON_LOGGER(USER_IO, DEBUG, "FSM error: Unexpected string data.\n", 0);
 		user_io_fsm(user_io_input_unhandled);

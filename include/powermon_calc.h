@@ -21,6 +21,7 @@
 #ifndef __POWERMON_CALC_H__
 #define __POWERMON_CALC_H__
 
+#include <stdint.h>
 #include "common.h"
 
 #define MAX_QUEUE_DEPTH MAX_POWERMON_NODES
@@ -60,7 +61,8 @@ typedef struct _pwrCalcSystemStatus {
 
 } PwrCalcSystemStatus;
 
-void consoleReportActiveNodes(void);
 void consoleReportSystemStatus(void);
+void consoleReportActiveNodes(void);
+void consoleReportDumpActiveNode(uint32_t node);
 
 #endif /* __POWERMON_CALC_H__ */

@@ -19,6 +19,9 @@
 /* ============================================================== */
 
 #include <stdio.h>
+#include <inttypes.h>
+#include <errno.h>
+#include <string.h>
 
 #include "config_ctxt.h"
 #include "login_ctxt.h"
@@ -43,7 +46,8 @@ static void report_screen(void);
 io_context_t report_ctxt = {
 	.context = report_context,
 	.ctxt_str = { 0 },
-	.curr_state = user_io_state_init
+	.curr_state = user_io_state_init,
+	.msg = { 0 }
 };
 
 
@@ -75,7 +79,7 @@ static void report_screen(void)
 	printw("\t ========================================================================================= \n");
 	printw("\t System Statistics\n");
 	printw("\t ========================================================================================= \n");
-	consoleReportSystemStatus();
+	consoleReportSystemStatus(); /* In powermon_calc.c */
 	printw("\t ========================================================================================= \n");
 	printw("\t %s", timeBuf);
 	printw("\t Elapsed time: %d days, %02d:%02d:%02d\n\n",
@@ -84,6 +88,7 @@ static void report_screen(void)
 	printw("\t|                                                                                         |\n");
 	printw("\t|                                    t - top menu                                         |\n");
 	printw("\t|                                    r - refresh                                          |\n");
+	printw("\t|                                  1:n - dump node                                        |\n");
 	printw("\t|                                    o - logout                                           |\n");
 	printw("\t|                                                                                         |\n");
 	printw("\t ========================================================================================= \n");
@@ -91,6 +96,32 @@ static void report_screen(void)
 	refresh();
 }
 
+static void dump_node_screen(void)
+{
+	char *endptr;
+	uint32_t nodeIndex = strtoimax(report_ctxt.msg.data, &endptr, 10);
+
+	erase(); /* Clear the screen */
+
+	printw("\t ========================================================================================= \n");
+	printw("\t|                                                                                         |\n");
+	printw("\t|                                     Dump Node                                           |\n");
+	printw("\t|                                                                                         |\n");
+	printw("\t ========================================================================================= \n");
+
+	consoleReportDumpActiveNode(nodeIndex); /* In powermon_calc.c */
+
+	printw("\t ========================================================================================= \n");
+	printw("\t|                                                                                         |\n");
+	printw("\t|                                    t - top menu                                         |\n");
+	printw("\t|                                    r - refresh                                          |\n");
+	printw("\t|                                  1:n - dump node                                        |\n");
+	printw("\t|                                    o - logout                                           |\n");
+	printw("\t|                                                                                         |\n");
+	printw("\t ========================================================================================= \n");
+	printw("\t\t: ");
+	refresh();
+}
 
 static void init_report_fsm(void)
 {
@@ -104,8 +135,17 @@ static void init_report_fsm(void)
 			report_screen);
 	user_io_fsm_register(
 			user_io_state_report,
+			user_io_input_key_numeric,
+			dump_node_screen);
+	user_io_fsm_register(
+			user_io_state_report,
 			user_io_input_key_o,
 			login_context);
+}
+
+void configure_input(pwrmon_msg_t *msg)
+{
+	memcpy(&report_ctxt.msg, msg, sizeof(pwrmon_msg_t));
 }
 
 void report_context(void)
