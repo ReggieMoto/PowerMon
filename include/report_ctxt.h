@@ -21,7 +21,9 @@
 #ifndef __INCLUDE_REPORT_CTXT_H__
 #define __INCLUDE_REPORT_CTXT_H__
 
-void report_context(void);
+#include "pwr_mon_msg.h"
 
+void report_context(void);
+void cfg_report_input(pwrmon_msg_t *msg);
 
 #endif /* __INCLUDE_REPORT_CTXT_H__ */

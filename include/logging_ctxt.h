@@ -1,6 +1,6 @@
 /* ============================================================== */
 /*
- * config_ctxt.h
+ * logging_ctxt.h
  *
  * Copyright (c) 2020 David Hammond
  * All Rights Reserved.
@@ -18,10 +18,13 @@
  */
 /* ============================================================== */
 
-#ifndef __INCLUDE_CONFIG_CTXT_H__
-#define __INCLUDE_CONFIG_CTXT_H__
+#ifndef __INCLUDE_LOGGING_CTXT_H__
+#define __INCLUDE_LOGGING_CTXT_H__
 
-void config_context(void);
+#include "pwr_mon_msg.h"
+
+void logging_context(void);
+void cfg_logging_input(pwrmon_msg_t *msg);
 
 
-#endif /* __INCLUDE_CONFIG_CTXT_H__ */
+#endif /* __INCLUDE_LOGGING_CTXT_H__ */

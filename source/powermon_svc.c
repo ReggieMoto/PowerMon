@@ -75,7 +75,7 @@ int initAvahiPollApi(void)
 
 	if (simplePollApi)
 	{
-		pollApi = avahi_simple_poll_get(simplePollApi);
+		pollApi = (AvahiPoll *)avahi_simple_poll_get(simplePollApi);
 
 		if (!pollApi)
 		{
@@ -287,17 +287,17 @@ void release_avahi_svc_resources(void)
 {
 	pthread_mutex_lock(&avahi_svc_mutex);
 
-	if(simplePollApi)
-	{
-		avahi_simple_poll_quit(simplePollApi);
-		avahi_simple_poll_free(simplePollApi);
-		simplePollApi = (AvahiSimplePoll *)NULL;
-	}
-
 	if(avahiClient)
 	{
 		avahi_client_free(avahiClient);
 		avahiClient = (AvahiClient *)NULL;
+	}
+
+	if(simplePollApi)
+	{
+		/* avahi_simple_poll_quit(simplePollApi); */
+		avahi_simple_poll_free(simplePollApi);
+		simplePollApi = (AvahiSimplePoll *)NULL;
 	}
 
 	pthread_mutex_unlock(&avahi_svc_mutex);
@@ -308,7 +308,9 @@ void set_avahi_thread_inactive(void)
 	POWERMON_LOGGER(AVAHI, DEBUG, "Signaling avahi_svc_thread to terminate.\n",0);
 
 	avahi_thread_active = FALSE;
-	release_avahi_svc_resources();
+
+	avahi_simple_poll_quit(simplePollApi);
+	/* release_avahi_svc_resources(); */
 }
 
 /* =================================
@@ -329,6 +331,8 @@ void* avahi_svc_thread(void *arg)
 
 		/* Run the main loop */
 		avahi_simple_poll_loop(simplePollApi);
+
+		release_avahi_svc_resources();
 
 		POWERMON_LOGGER(AVAHI, THREAD, "Exiting avahi_svc_thread.\n",0);
 	}

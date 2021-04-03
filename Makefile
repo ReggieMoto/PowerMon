@@ -25,6 +25,7 @@ SRCS += source/credentials.c
 SRCS += source/contexts/login_ctxt.c
 SRCS += source/contexts/config_ctxt.c
 SRCS += source/contexts/report_ctxt.c
+SRCS += source/contexts/logging_ctxt.c
 SRCS += source/contexts/user_ctxt.c
 SRCS += source/contexts/add_user_ctxt.c
 SRCS += source/contexts/edit_user_ctxt.c

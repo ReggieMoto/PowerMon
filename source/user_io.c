@@ -174,6 +174,19 @@ static void process_keypress(pwrmon_msg_t *msg)
 		user_io_fsm(user_io_input_key_x);
 		break;
 
+	case '1':
+	case '2':
+	case '3':
+	case '4':
+	case '5':
+	case '6':
+	case '7':
+	case '8':
+	case '9':
+		POWERMON_LOGGER(USER_IO, DEBUG, "Received user numeric input.\n", 0);
+		user_io_fsm_process_string(msg);
+		break;
+
 	default:
 		POWERMON_LOGGER(USER_IO, DEBUG, "Received unhandled keypress.\n", 0);
 		user_io_fsm(user_io_input_unhandled);

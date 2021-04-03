@@ -38,6 +38,9 @@
 
 #define MAX_COUNT_SAMPLES 7
 
+/*
+ * Represents a node being managed by PowerMon
+ */
 typedef struct _activeNode {
 	SerialNumber_t serialNumber;
 	unsigned int nodeIp;

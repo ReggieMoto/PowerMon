@@ -40,26 +40,33 @@ typedef enum {
 } powermon_log_level_e;
 
 typedef enum {
-	powermon_log_thread_first = 0,
-	NONE = powermon_log_thread_first,
+	powermon_log_module_first = 0,
+	NONE = powermon_log_module_first,
 	MAIN,
 	PWRMON,
 	USER_IO,
 	CONSOLE_IO,
-	XCONSOLE_IO,
 	DEV_IO,
 	DSTORE,
 	MSGQ,
 	AVAHI,
 	CALC,
 	ALL,
-	powermon_log_thread_last = ALL,
-	powermon_log_thread_count
-} powermon_log_thread_e;
+	powermon_log_module_last = ALL,
+	powermon_log_module_count
+} powermon_log_module_e;
 
 int powermon_logger_init(void);
 void powermon_logger_shutdown(void);
-void powermon_logger(powermon_log_thread_e thread_id, powermon_log_level_e log_level, char *filename, int line_no, const char *format_str, ...);
+void powermon_logger(powermon_log_module_e thread_id, powermon_log_level_e log_level, char *filename, int line_no, const char *format_str, ...);
+void set_logger_level(powermon_log_level_e new_level);
+powermon_log_level_e get_logger_level(void);
+char * get_logger_level_str(powermon_log_level_e log_level);
+powermon_log_level_e get_logger_level_from_char(char c_level);
+void set_logger_module(powermon_log_module_e new_module);
+powermon_log_module_e get_logger_module(void);
+char * get_logger_module_str(powermon_log_module_e log_module);
+powermon_log_module_e get_logger_module_from_char(char c_module);
 
 #define POWERMON_LOGGER(TID,LVL,STR, ARGS...) powermon_logger(TID,LVL,__FILE__,__LINE__,STR,ARGS)
 

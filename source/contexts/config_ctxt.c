@@ -19,6 +19,7 @@
 /* ============================================================== */
 
 #include "config_ctxt.h"
+#include "logging_ctxt.h"
 #include "login_ctxt.h"
 #include "report_ctxt.h"
 #include "user_ctxt.h"
@@ -35,7 +36,6 @@ static void init_config_fsm(void);
 static void config_screen(void);
 
 /* FSM actions */
-static void goto_config_logging(void);
 static void goto_config_dev_disc(void);
 static void goto_config_network(void);
 
@@ -70,11 +70,6 @@ static void config_screen(void)
 	refresh();
 }
 
-static void goto_config_logging(void)
-{
-	config_context();
-}
-
 static void goto_config_dev_disc(void)
 {
 	config_context();
@@ -102,7 +97,7 @@ static void init_config_fsm(void)
 	user_io_fsm_register(
 			user_io_state_main,
 			user_io_input_key_l,
-			goto_config_logging);
+			logging_context);
 	user_io_fsm_register(
 			user_io_state_main,
 			user_io_input_key_d,

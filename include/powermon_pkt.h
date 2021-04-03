@@ -25,6 +25,8 @@
 #ifndef __POWERMON_PKT_H__
 #define __POWERMON_PKT_H__
 
+#include <stdint.h>
+
 typedef enum _msgType {
 	client_Data,
 	srvrCmd_Off,
@@ -37,13 +39,14 @@ typedef enum _mode {
 } Mode_e;
 
 typedef enum _operation {
-	Defrost,
-	Normal
+	Idle,
+	Cooling,
+	Defrost
 } Operation_e;
 
 typedef struct _serialno {
-	unsigned long long int mfgId;
-	int nodeId;
+	uint64_t mfgId;
+	uint32_t nodeId;
 } SerialNumber_t;
 
 #define NodeVersion 1
@@ -51,15 +54,15 @@ typedef struct _serialno {
 
 typedef struct _node {
 	SerialNumber_t serialNumber;
-	unsigned int nodeIp;
+	uint32_t nodeIp;
 	Mode_e mode;	/* Auto = 1(default)/Off = 0 */
-	Operation_e operation;	/* Normal = 1 (default)/Defrost = 0 */
+	Operation_e operation;	/* Idle/Cooling/Defrost */
 } Node;
 
 typedef struct _nodeData
 {
-	unsigned int temp;
-	unsigned int amps;
+	uint8_t temp;
+	uint8_t amps;
 } NodeData;
 
 typedef struct _packet {

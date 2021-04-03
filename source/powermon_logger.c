@@ -33,7 +33,7 @@
 #include "powermon_logger.h"
 
 static powermon_log_level_e global_log_level;
-static powermon_log_thread_e global_thread_logging;
+static powermon_log_module_e global_module_logging;
 
 static pthread_mutex_t logger_mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -69,9 +69,6 @@ static int logger_open_logfile(void)
 	snprintf(fname, LOG_FNAME_MAX-1, LOG_FNAME_STRING, getpid(), (int)t);
 	strncat(fqname, fname, remaining-1);
 
-	printw("Opening logfile: %s\n", fqname);
-	refresh();
-
 	logfd = fopen(fqname, "w");
 	filesize = 0;
 
@@ -89,23 +86,20 @@ static int logger_close_logfile(void)
 
 	if (logfd != NULL)
 	{
-		printw("Closing logfile\n");
-		refresh();
-
 		status = fclose(logfd);
 	}
 
 	return status;
 }
 
-#define MAX_LOGGER_FILESIZE (8*1024) /* 8k filesize */
+#define MAX_LOGGER_FILESIZE (5*1024*1024) /* 5MB filesize */
 
 static int logger_log_entry(char *log_entry)
 {
 	int status = 0;
 	char log_str[STR_ENTRY_LEN];
 
-	if ((strlen(log_entry) + filesize) >= MAX_LOGGER_FILESIZE)
+	if ((filesize += strlen(log_entry)) >= MAX_LOGGER_FILESIZE)
 	{
 		status = logger_close_logfile();
 		if (status == 0)
@@ -127,8 +121,7 @@ static int logger_log_entry(char *log_entry)
 		strncat(log_str, log_entry, remaining-1);
 
 		status = fwrite(log_str, strlen(log_str), 1, logfd);
-		//fdatasync(fileno(logfd));
-		fsync(fileno(logfd));
+		fdatasync(fileno(logfd));
 	}
 
 	if (status == 0)
@@ -163,29 +156,127 @@ powermon_log_level_e get_logger_level(void)
 }
 
 /* =================================
- * set_logger_thread
+ * get_logger_level_from_char
  */
-void set_logger_thread(powermon_log_thread_e new_thread)
+powermon_log_level_e get_logger_level_from_char(char c_level)
+{
+	powermon_log_level_e level;
+
+	if ((c_level >= '0') && (c_level <= '6')) {
+
+		switch(c_level)
+		{
+		case '0':
+			level = OFF;
+			break;
+		case '1':
+			level = FATAL;
+			break;
+		case '2':
+			level = WARN;
+			break;
+		case '3':
+			level = THREAD;
+			break;
+		case '4':
+			level = INFO;
+			break;
+		case '5':
+			level = DEBUG;
+			break;
+		case '6':
+			level = TRACE;
+			break;
+		default:
+			level = INFO;
+			break;
+		}
+	} else {
+		level = INFO;
+	}
+
+	return (level);
+}
+
+/* =================================
+ * set_logger_module
+ */
+void set_logger_module(powermon_log_module_e new_module)
 {
 	pthread_mutex_lock(&logger_mutex);
-	global_thread_logging = new_thread;
+	global_module_logging = new_module;
 	pthread_mutex_unlock(&logger_mutex);
 }
 
 /* =================================
- * get_logger_thread
+ * get_logger_module
  */
-powermon_log_thread_e get_logger_thread(void)
+powermon_log_module_e get_logger_module(void)
 {
-	powermon_log_thread_e tid;
+	powermon_log_module_e tid;
 	pthread_mutex_lock(&logger_mutex);
-	tid = global_thread_logging;
+	tid = global_module_logging;
 	pthread_mutex_unlock(&logger_mutex);
 	return (tid);
 }
 
 /* =================================
- * get_logger_thread_str
+ * get_logger_module_from_char
+ */
+powermon_log_module_e get_logger_module_from_char(char c_module)
+{
+	powermon_log_module_e module;
+
+	if ((c_module >= 'a') && (c_module <= 'z')) {
+		switch(c_module)
+		{
+		case 'a':
+			module = ALL;
+			break;
+		case 'c':
+			module = CALC;
+			break;
+		case 'd':
+			module = DSTORE;
+			break;
+		case 'e':
+			module = DEV_IO;
+			break;
+		case 'i':
+			module = CONSOLE_IO;
+			break;
+		case 'm':
+			module = MAIN;
+			break;
+		case 'n':
+			module = NONE;
+			break;
+		case 'p':
+			module = PWRMON;
+			break;
+		case 'q':
+			module = MSGQ;
+			break;
+		case 'u':
+			module = USER_IO;
+			break;
+		case 'v':
+			module = AVAHI;
+			break;
+		default:
+			module = ALL;
+			break;
+		}
+	} else {
+		module = ALL;
+	}
+
+	return (module);
+}
+
+
+/* =================================
+ * get_logger_module_str
  */
 char * get_logger_level_str(powermon_log_level_e log_level)
 {
@@ -194,25 +285,25 @@ char * get_logger_level_str(powermon_log_level_e log_level)
 	switch(log_level)
 	{
 	case FATAL:
-		level_str = "FATAL\t";
+		level_str = "FATAL";
 		break;
 	case WARN:
-		level_str = "WARN\t";
+		level_str = "WARN";
 		break;
 	case THREAD:
-		level_str = "THREAD\t";
+		level_str = "THREAD";
 		break;
 	case INFO:
-		level_str = "INFO\t";
+		level_str = "INFO";
 		break;
 	case DEBUG:
-		level_str = "DEBUG\t";
+		level_str = "DEBUG";
 		break;
 	case TRACE:
-		level_str = "TRACE\t";
+		level_str = "TRACE";
 		break;
 	default:
-		level_str = "UNK\t";
+		level_str = "UNK";
 		break;
 	}
 
@@ -220,66 +311,65 @@ char * get_logger_level_str(powermon_log_level_e log_level)
 }
 
 /* =================================
- * get_logger_thread_str
+ * get_logger_module_str
  */
-char * get_logger_thread_str(powermon_log_thread_e thread_id)
+char * get_logger_module_str(powermon_log_module_e module_id)
 {
-	char *thread_str;
+	char *module_str;
 
-	switch(thread_id)
+	switch(module_id)
 	{
 	case MAIN:
-		thread_str = "MAIN\t";
+		module_str = "MAIN";
 		break;
 	case PWRMON:
-		thread_str = "PWRMON\t";
+		module_str = "PWRMON";
 		break;
 	case USER_IO:
-		thread_str = "USR_IO\t";
+		module_str = "USR_IO";
 		break;
 	case CONSOLE_IO:
-		thread_str = "CNSL_IO\t";
-		break;
-	case XCONSOLE_IO:
-		thread_str = "XCNSL_IO\t";
+		module_str = "CNSL_IO";
 		break;
 	case DEV_IO:
-		thread_str = "DEV_IO\t";
+		module_str = "DEV_IO";
 		break;
 	case DSTORE:
-		thread_str = "DSTORE\t";
+		module_str = "DSTORE";
 		break;
 	case MSGQ:
-		thread_str = "MSGQ\t";
+		module_str = "MSGQ";
 		break;
 	case AVAHI:
-		thread_str = "AVAHI\t";
+		module_str = "AVAHI";
 		break;
 	case CALC:
-		thread_str = "CALC\t";
+		module_str = "CALC";
+		break;
+	case ALL:
+		module_str = "ALL";
 		break;
 	default:
-		thread_str = "UNK\t";
+		module_str = "UNK";
 		break;
 	}
 
-	return (thread_str);
+	return (module_str);
 }
 
 /* =================================
  * powermon_logger
  */
-void powermon_logger(powermon_log_thread_e thread_id, powermon_log_level_e log_level, char *filename, int line_no, const char *format_str, ...)
+void powermon_logger(powermon_log_module_e module_id, powermon_log_level_e log_level, char *filename, int line_no, const char *format_str, ...)
 {
 	powermon_log_level_e level = get_logger_level();
-	powermon_log_thread_e tid = get_logger_thread();
+	powermon_log_module_e module = get_logger_module();
 
-	if ((tid != NONE) &&
-		((log_level <= INFO) ||
+	if ((log_level <= INFO) ||
 		((level == DEBUG) && (log_level <= level)) ||
-		((level == TRACE) && (log_level <= level))))
+		((level == TRACE) && (log_level <= level)))
 	{
-		if ((tid == ALL) || (thread_id == tid))
+		if ((module == ALL) || (module_id == module))
 		{
 			pthread_mutex_lock(&logger_mutex);
 
@@ -293,10 +383,11 @@ void powermon_logger(powermon_log_thread_e thread_id, powermon_log_level_e log_l
 			/* vsprintf(log_entry, "%s - ", now()); */
 
 			/* Get the thread we are logging from */
-			sprintf(log_entry, "%s", get_logger_thread_str(thread_id));
+			sprintf(log_entry, "%s\t", get_logger_module_str(module_id));
 
 			/* Get the logging level */
 			strcat(log_entry, get_logger_level_str(log_level));
+			strcat(log_entry, "\t");
 
 			/* Get the filename and the line number */
 			sprintf(str_builder, "%s\tline %3d: ", filename, line_no);
@@ -329,8 +420,8 @@ int powermon_logger_init(void)
 				tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
 		refresh();
 
-		set_logger_level(TRACE);
-		set_logger_thread(ALL);
+		set_logger_level(INFO);
+		set_logger_module(ALL);
 	}
 	else
 	{
